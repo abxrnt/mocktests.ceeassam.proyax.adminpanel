@@ -3,2051 +3,1037 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>PROYAX Admin — Mock Manager (orange theme)</title>
+  <title>PYQs - Modal Fix (typing & QID editable) + Progress</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#fff6f1;
-      --primary:#ff8a00;
-      --accent:#ff6b00;
-      --muted:#6b5a50;
-      --muted-2:#7a655b;
-      --muted-3:#9b8580;
-      --sidebar-w:20%;
-      --sidebar-min-w:180px;
-      --topbar-h:0px;
-      --radius:12px;
-      --success:#16a34a;
-      --danger:#ff4d4d;
-      --card-bg:#ffffff;
-      --glass: rgba(255,255,255,0.6);
-      --shadow-1: 0 8px 24px rgba(255,138,0,0.06);
-      --input-border: rgba(43,43,43,0.06);
+      --bg: #f7f9f6;
+      --surface: #ffffff;
+      --muted-surface: #fbfdfb;
+      --primary: #1db954;
+      --accent: #16a34a;
+      --text: #0b2a1a;
+      --muted: #4a6b56;
+      --muted-2: #6a8b6e;
+      --input-border: rgba(13,120,73,0.12);
+      --danger: #e03a3a;
+      --radius:8px;
     }
 
-    html,body{ height:100%; margin:0; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial; background:var(--bg); color:#2b2b2b; font-size:14px; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
-    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+    :root { --gap:8px; --pad:8px; --fs-base:13px; }
+    *{ box-sizing:border-box; font-size:var(--fs-base); color:var(--text); -webkit-font-smoothing:antialiased; }
 
-    /* layout */
-    .app{ display:flex; height:100vh; overflow:hidden; }
-    .sidebar{ width:var(--sidebar-w); min-width:var(--sidebar-min-w); padding:18px; background:linear-gradient(180deg,#fff9f4,#fff6f1); border-right:1px solid rgba(43,43,43,0.04); display:flex; flex-direction:column; gap:12px; }
-    .logo-row{ display:flex; gap:12px; align-items:center; }
-    .mark-link{
-      width:44px;
-      height:44px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:10px;
-      background: linear-gradient(135deg,var(--primary),#ffc07a);
-      box-shadow: 0 6px 20px rgba(255,138,0,0.12);
-      overflow:hidden;
-      text-decoration:none;
-      flex-shrink:0;
+    /* scale wrapper (only app content) */
+    .app-scale {
+      transform: scale(0.7);
+      transform-origin: top left;
+      width: 142%;
+      overflow-x: hidden;
+      position: relative;
+      z-index: 1; /* below modal */
     }
-    .mark-img{ width:30px; height:30px; object-fit:contain; display:block; border-radius:6px; background:transparent; }
+    body.modal-active .app-scale { transform:none !important; width:100% !important; }
 
-    nav{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-    .nav-item{ padding:10px; border-radius:10px; cursor:pointer; color:var(--muted); display:flex; gap:10px; align-items:center; font-size:13px; transition:all .12s ease; }
-    .nav-item:hover{ transform:translateY(-1px); box-shadow:var(--shadow-1) }
-    .nav-item.active{ background:linear-gradient(90deg, rgba(255,138,0,0.08), rgba(255,107,0,0.04)); color:var(--primary); font-weight:700; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6); }
-    .nav-item .material-icons{ font-size:18px; }
+    .topbar { display:flex; gap:10px; align-items:center; padding:12px 14px; width:100%; background:transparent; }
+    .controls { display:flex; gap:8px; align-items:center; width:100%; padding:6px 14px; flex-wrap:wrap; }
+    .input, .select { padding:8px 10px; border-radius:8px; border:1px solid var(--input-border); background: var(--muted-surface); color:var(--text); font-size:13px; min-height:36px; box-sizing:border-box; }
+    .input::placeholder{ color: rgba(11,42,26,0.38); }
+    .btn{ background:linear-gradient(180deg,var(--primary),var(--accent)); color:#ffffff; padding:8px 10px; border-radius:8px; border:0; cursor:pointer; font-weight:700; font-size:13px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 8px 18px rgba(29,185,84,0.12); }
+    .btn.secondary{ background:transparent; color:var(--muted-2); border:1px solid rgba(10,10,10,0.04); box-shadow:none; }
+    .btn.ghost{ background:transparent; color:var(--muted); border:1px solid rgba(10,10,10,0.04); box-shadow:none; }
+    .small-muted{ font-size:12px; color:var(--muted); }
 
-    .side-foot{ margin-top:auto; font-size:12px; color:var(--muted-3); padding-top:8px; border-top:1px dashed rgba(43,43,43,0.03); }
-
-    .main{ flex:1; display:flex; flex-direction:column; min-width:0; }
-    .content{ flex:1; overflow:auto; padding:22px; }
-    .muted{ color:var(--muted); font-size:13px; }
-
-    /* tiles */
-    .tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:12px; margin-bottom:16px; }
-    .tile{ background:var(--card-bg); padding:16px; border-radius:12px; border:1px solid rgba(43,43,43,0.03); display:flex; flex-direction:column; gap:8px; box-shadow:0 8px 24px rgba(255,138,0,0.03); }
-    .tile .label{ color:var(--muted); font-size:12px }
-    .tile .value{ font-size:26px; font-weight:900; color:var(--primary) }
-    .tile .mini{ font-size:12px; color:var(--muted) }
-
-    .card{ background:var(--card-bg); padding:14px; border-radius:12px; border:1px solid rgba(43,43,43,0.03); box-shadow: 0 8px 30px rgba(0,0,0,0.03); }
-    .table{ width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
-    .table th, .table td{ padding:10px; border-bottom:1px solid rgba(43,43,43,0.06); text-align:left; font-size:13px; vertical-align:middle; }
-    .table thead th{ color:var(--muted); font-weight:700; background:transparent; }
-
-    /* Compact builder row styles */
-    .builder-compact-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .builder-compact-row .field{ display:flex; flex-direction:column; gap:8px; }
-    .compact-input, .compact-select, .input, .select{
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px solid var(--input-border);
-      background:#fff;
-      font-size:14px;
-      min-height:40px;
-      transition:box-shadow .12s ease, border-color .12s ease;
-      box-shadow:none;
-    }
-    .compact-input:focus, .compact-select:focus, .input:focus, .select:focus{
-      outline:none;
-      border-color: rgba(255,138,0,0.4);
-      box-shadow: 0 6px 18px rgba(255,138,0,0.06);
-    }
-    .compact-select{ appearance:none; -webkit-appearance:none; -moz-appearance:none; background-image: linear-gradient(45deg, transparent 50%, var(--muted-3) 50%), linear-gradient(135deg, var(--muted-3) 50%, transparent 50%); background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right:36px; }
-
-    .tabs{ display:flex; gap:8px; margin-top:12px; }
-    .tab{ padding:8px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.04); cursor:pointer; background:#fff; font-weight:700; font-size:13px; color:var(--muted-2); }
-    .tab.active{ background:linear-gradient(90deg,#fff7f2,#fff1e6); color:var(--primary); box-shadow:0 6px 18px rgba(255,138,0,0.06); }
-
-    .qid{ font-weight:900 }
-    .small-muted{ font-size:12px; color:var(--muted) }
-
-    .score-card{ width:220px; padding:12px; border-radius:12px; background:linear-gradient(180deg,#fff,#fff8f2); border:1px solid rgba(43,43,43,0.04); display:flex; flex-direction:column; align-items:center; gap:10px; }
-    .donut { width:120px; height:120px; }
-
-    .btn{ background:var(--accent); color:#fff; padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:700; font-size:14px; box-shadow:0 10px 22px rgba(255,107,0,0.12); display:inline-flex; align-items:center; gap:8px; }
-    .btn.secondary{ background:#fff; color:var(--muted-2); border:1px solid rgba(243,205,177,0.6); box-shadow:none; }
-    .btn.icon-only{ padding:8px; width:44px; height:44px; justify-content:center; border-radius:10px; }
-    .btn.danger{ background:var(--danger); color:#fff; }
-    .flex{ display:flex; gap:8px; align-items:center; }
-    .hidden{ display:none !important; }
-    button:focus { outline: 3px solid rgba(255,138,0,0.12); outline-offset:2px; }
-    .muted-small{ color:var(--muted); font-size:12px; }
-    .chip{ padding:6px 8px; border-radius:999px; background:#fff; border:1px solid rgba(43,43,43,0.04); font-weight:600; font-size:13px; }
-
-    /* PYQs cards layout */
-    .pyq-controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
-    .pyq-cards{ display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .pyq-card{ background:var(--card-bg); border-radius:12px; padding:12px; border:1px solid rgba(43,43,43,0.04); display:flex; flex-direction:column; gap:12px; align-items:stretch; min-height:180px; box-shadow:0 10px 30px rgba(255,138,0,0.03); transition:transform .12s ease, box-shadow .12s ease; }
-    .pyq-card:hover{ transform: translateY(-6px); box-shadow: 0 20px 45px rgba(0,0,0,0.06); }
-    .pyq-thumb{ height:110px; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#fff8f2; border:1px solid rgba(43,43,43,0.02); }
+    .pyq-cards { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); padding:6px 12px 60px 12px; }
+    .pyq-card{ background: var(--surface); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:8px; min-height:140px; border:1px solid rgba(10,10,10,0.04); box-shadow: 0 6px 18px rgba(14, 48, 30, 0.04); position:relative; overflow:visible; }
+    .pyq-thumb{ height:96px; border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(29,185,84,0.04), rgba(29,185,84,0.01)); border:1px solid rgba(29,185,84,0.04); }
     .pyq-thumb img{ max-width:100%; max-height:100%; object-fit:contain; display:block; }
     .pyq-meta{ display:flex; justify-content:space-between; gap:8px; align-items:center; font-size:12px; color:var(--muted); }
-    .pyq-title{ font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#2b2b2b; }
-    .pyq-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:auto; }
+    .pyq-title{ font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
 
-    .icon-btn{ width:40px; height:38px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:none; cursor:pointer; }
-    .icon-btn svg{ width:18px; height:18px; display:block; }
+    .cee-badge { position:absolute; left:10px; bottom:8px; font-size:11px; color: rgba(7, 44, 26, 0.75); font-weight:700; background: rgba(242,255,244,0.9); padding:4px 6px; border-radius:6px; border:1px solid rgba(10,10,10,0.02); }
 
-    .sort-toggle{ display:inline-flex; align-items:center; border-radius:999px; background:#fff; border:1px solid rgba(43,43,43,0.06); padding:6px; gap:6px; }
-    .sort-toggle button{ width:34px; height:30px; border-radius:8px; border:0; background:transparent; cursor:pointer; }
-    .sort-toggle button.active{ background:linear-gradient(90deg,#fff7f2,#fff1e6); color:var(--primary); box-shadow:0 4px 10px rgba(255,138,0,0.06); }
+    .icon-btn{ width:36px; height:34px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:none; cursor:pointer; color:var(--muted-2); }
+    .icon-btn:hover{ color:var(--primary); transform:translateY(-1px); }
 
-    .modal-card{ background:#fff; padding:20px; border-radius:12px; width:560px; max-width:96%; box-shadow:0 28px 80px rgba(0,0,0,0.18); border:1px solid rgba(0,0,0,0.04); }
+    /* PREVIEW and modal */
+    .preview-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:2100000; }
+    .preview-card{ background: #ffffff; padding:12px; border-radius:10px; max-width:92%; max-height:86%; box-shadow:0 24px 80px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:8px; align-items:center; color:var(--text); border:1px solid rgba(10,10,10,0.04); }
 
-    /* LOGIN: full-screen attractive */
-    #modal-login {
+    #modal-root { position: fixed; inset: 0; z-index:2147483647; display:none; pointer-events:auto; }
+    .modal-backdrop {
       position: fixed;
       inset: 0;
+      background: rgba(0,0,0,0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
-      background: linear-gradient(135deg, rgba(255,138,0,0.12), rgba(255,107,0,0.06)), radial-gradient(800px 400px at 10% 10%, rgba(255,200,150,0.06), transparent 15%), radial-gradient(600px 300px at 90% 90%, rgba(110,231,183,0.03), transparent 15%);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+      pointer-events:auto;
+      padding:20px;
+      z-index:2147483647;
     }
-    #modal-login .login-card{
-      width: 920px;
+    .modal-card {
+      width: 880px;
       max-width: calc(100% - 40px);
-      border-radius: 18px;
+      max-height: 80vh;
+      background: var(--surface);
+      padding: 0;
+      border-radius:12px;
+      box-shadow:0 24px 80px rgba(0,0,0,0.12);
       overflow: hidden;
       display: flex;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.18);
-      transform: translateY(6px);
-      animation: slideIn 380ms cubic-bezier(.2,.9,.2,1);
+      flex-direction: column;
+      color: var(--text);
+      z-index:2147483648;
     }
-    @keyframes slideIn { from { opacity:0; transform: translateY(20px) } to { opacity:1; transform: translateY(0) } }
-
-    .login-left{
-      width: 48%;
-      background: linear-gradient(180deg, #fff, #fff8f2);
-      padding: 34px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      justify-content:center;
-      align-items:flex-start;
+    .modal-header {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(10,10,10,0.04);
+      background: linear-gradient(90deg, rgba(29,185,84,0.02), transparent);
+      position: relative;
+      z-index: 30;
     }
-    .login-right{
-      width: 52%;
-      background: linear-gradient(180deg,#fff8f2,#fff6f1);
-      padding: 36px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      justify-content:center;
+    .modal-body { padding: 12px 16px; flex: 1 1 auto; overflow-y: auto; background: transparent; }
+
+    .records-table {
+      width:100%;
+      border-collapse:collapse;
+      margin-top:8px;
+      font-size:13px;
+      color:var(--text);
+      table-layout: fixed;
     }
-    .brand{
-      display:flex; gap:14px; align-items:center;
+    .records-table thead th {
+      text-align:left;
+      color:var(--muted-2);
+      padding:8px;
+      border-bottom:1px solid rgba(10,10,10,0.04);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 120;
+      white-space:nowrap;
+      font-weight:700;
     }
-    .brand .mark{
-      width:62px;height:62px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary),#ffc07a);box-shadow:0 12px 36px rgba(255,138,0,0.12);
-    }
-    .brand h2{ margin:0; font-size:20px; color:var(--primary); font-weight:900; letter-spacing:0.2px; }
-    .tagline{ color:var(--muted-2); font-size:13px; max-width:260px; }
+    .records-table th, .records-table td { padding:8px; border-bottom:1px solid rgba(10,10,10,0.03); vertical-align:middle; background:transparent; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 
-    .login-title{ font-size:20px; font-weight:800; color:#2b2b2b; margin:0; }
-    .login-desc{ color:var(--muted); font-size:13px; margin-bottom:8px; }
-    .login-form{ display:flex; flex-direction:column; gap:12px; margin-top:6px }
+    /* allow inputs to shrink and keep caret */
+    .record-input { padding:8px 10px; border-radius:6px; border:1px solid var(--input-border); min-height:36px; font-size:13px; background: var(--surface); color:var(--text); width:100%; min-width:0; box-sizing:border-box; display:block; height:40px; line-height:20px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .record-input[readonly]{ background:#fbfbfb; }
 
-    .input-lg{ padding:12px 14px; border-radius:12px; border:1px solid rgba(0,0,0,0.06); background:#fff; font-size:15px; min-height:48px; }
-    .login-actions{ display:flex; gap:10px; margin-top:6px; align-items:center }
-    .oauth-hint{ font-size:12px; color:var(--muted); margin-top:6px; }
+    .abcd-group { display:flex; gap:6px; flex-wrap:nowrap; }
+    .abcd-btn { padding:6px 8px; border-radius:6px; border:1px solid rgba(10,10,10,0.04); background:transparent; cursor:pointer; min-width:34px; text-align:center; font-weight:700; color:var(--muted); flex:0 0 auto; height:36px; line-height:18px; }
+    .abcd-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-    .login-footer { font-size:12px; color:var(--muted); margin-top:8px; display:flex; gap:8px; align-items:center; }
-    .social-row{ display:flex; gap:8px; }
+    .row-remove { background:transparent; border:0; color:var(--danger); cursor:pointer; font-weight:700; }
 
-    /* Hide default cancel (we removed it) */
-    #login-error { color: var(--danger); margin-top:8px; display:none; }
-
-    @media (max-width:980px){
-      .login-card{ flex-direction:column; width:92%; }
-      .login-left, .login-right { width:100%; padding:18px; }
-      .brand h2{ font-size:18px; }
+    @media (max-width:920px){
+      .modal-card { width: 94%; max-height: 86vh; }
+      .pyq-cards { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+      .app-scale { transform: none; width:100%; }
+      .records-table thead th { top:0; }
     }
 
-    @media (max-width:640px){
-      .tiles{ grid-template-columns:repeat(1,1fr) } .sidebar{ display:none }
-    }
+    .no-scroll { overflow: hidden !important; height: 100%; }
+
+    ::-webkit-scrollbar { height:10px; width:10px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(29,185,84,0.18), rgba(29,185,84,0.32)); border-radius:999px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    .visually-hidden{ position:absolute !important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
+
+    /* --- Progress modal styles --- */
+    #progress-root { position: fixed; inset: 0; z-index:2147483650; display:none; pointer-events:auto; }
+    .progress-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; padding:12px; }
+    .progress-card { width: calc(100% - 60px); max-width:1200px; height: 84vh; background: var(--surface); border-radius:10px; box-shadow:0 24px 80px rgba(0,0,0,0.12); display:flex; flex-direction:column; overflow:hidden; }
+    .progress-header { padding:12px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(10,10,10,0.04); }
+    .progress-body { padding:12px; flex:1 1 auto; overflow:auto; }
+    .progress-table { border-collapse:collapse; width:100%; table-layout: fixed; font-size:12px; }
+    .progress-table th, .progress-table td { border:1px solid rgba(10,10,10,0.04); padding:6px; text-align:center; min-width:40px; vertical-align:middle; }
+    .progress-table thead th { position: sticky; top:0; background:linear-gradient(180deg, rgba(255,255,255,0.9), var(--surface)); z-index:5; font-weight:700; }
+    .cell-check { display:inline-flex; align-items:center; justify-content:center; width:100%; height:100%; padding:4px; }
+    .cell-check svg{ width:16px; height:16px; }
+    .cell-empty { color: rgba(11,42,26,0.15); font-weight:700; }
+    .legend { display:flex; gap:12px; align-items:center; font-size:13px; color:var(--muted); }
+    .legend .dot { width:14px; height:14px; border-radius:3px; display:inline-block; }
+    .dot-ok{ background:var(--primary); }
+    .dot-miss{ background:transparent; border:1px solid rgba(11,42,26,0.06); }
   </style>
 </head>
-
 <body>
-<div class="app" id="app-root">
-  <aside class="sidebar" role="navigation" aria-label="Main Navigation">
-    <div class="logo-row">
-      <a href="/" aria-label="PROYAX home" class="mark-link">
-        <img src="favicon.png" alt="PROYAX logo" class="mark-img" />
-      </a>
-      <div style="line-height:1">
-        <div style="font-weight:800; font-size:13px">PROYAX Admin</div>
-        <div class="small-muted" style="font-size:11px">Mock & User Manager</div>
-      </div>
-    </div>
+  <!-- MODAL ROOT (existing) -->
+  <div id="modal-root" aria-hidden="true">
+    <div id="modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal-card" role="document" aria-labelledby="add-pyq-title">
+        <div class="modal-header">
+          <h2 style="margin:0;font-size:16px" id="add-pyq-title">Add PYQ Records</h2>
+          <div style="display:flex;gap:8px;align-items:center" class="top-actions">
+            <button id="add-row-btn" class="btn ghost" title="Add new empty record" aria-label="Add row" style="padding:8px 10px; display:inline-flex; gap:8px; align-items:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+                <path d="M12 5v14"></path><path d="M5 12h14"></path>
+              </svg>
+              <span class="btn-label visually-hidden">Add row</span>
+            </button>
 
-    <nav id="nav">
-      <div class="nav-item" data-view="dashboard"><span class="material-icons">dashboard</span><span style="font-size:13px">Dashboard</span></div>
-      <div class="nav-item" data-view="mocks"><span class="material-icons">assignment</span><span style="font-size:13px">Mocks</span></div>
-      <div class="nav-item" data-view="builder"><span class="material-icons">build_circle</span><span style="font-size:13px">Mock Builder</span></div>
-      <div class="nav-item" data-view="pyqs"><span class="material-icons">menu_book</span><span style="font-size:13px">PYQs Database</span></div>
-      <div class="nav-item" data-view="users"><span class="material-icons">people</span><span style="font-size:13px">Users</span></div>
-      <div class="nav-item" data-view="results"><span class="material-icons">bar_chart</span><span style="font-size:13px">Results</span></div>
-      <div class="nav-item" data-view="settings" style="display:none"><span class="material-icons">settings</span><span style="font-size:13px">Settings</span></div>
-    </nav>
+            <button id="cancel-records" class="btn secondary" title="Cancel" aria-label="Cancel" style="padding:8px 10px; display:inline-flex; gap:8px; align-items:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+                <path d="M18 6L6 18"></path><path d="M6 6l12 12"></path>
+              </svg>
+              <span class="btn-label visually-hidden">Cancel</span>
+            </button>
 
-    <div class="side-foot">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div>
-          <strong id="admin-name">Admin</strong>
-          <div class="small-muted" id="admin-role">superuser</div>
-        </div>
-        <div>
-          <button id="btn-signout" class="btn secondary" style="padding:6px 8px; font-size:12px; display:none">Sign out</button>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-    <div class="content" id="content-area">
-      <!-- Dashboard -->
-      <section id="view-dashboard" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <div>
-            <h1 style="margin:0;color:var(--primary); font-size:20px">Dashboard</h1>
-            <div class="muted">System overview & statistics</div>
+            <button id="submit-records" class="btn" title="Submit records" aria-label="Add all" style="padding:8px 10px; display:inline-flex; gap:8px; align-items:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>
+              <span class="btn-label">Add all</span>
+            </button>
           </div>
         </div>
 
-        <div class="tiles">
-          <div class="tile">
-            <div class="label">Total Users</div>
-            <div class="value" id="dash-users">0</div>
-            <div class="mini">Registered accounts</div>
-          </div>
-
-          <div class="tile">
-            <div class="label">Total Mocks</div>
-            <div class="value" id="dash-mocks">0</div>
-            <div class="mini">Active & inactive mocks</div>
-          </div>
-
-          <div class="tile">
-            <div class="label">Total Attempts</div>
-            <div class="value" id="dash-attempts">0</div>
-            <div class="mini">Submissions saved</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 style="font-size:14px;margin:0">Quick Actions</h2>
-          <div style="display:flex;gap:8px;margin-top:12px">
-            <button class="btn" id="go-mocks">Manage Mocks</button>
-            <button class="btn" id="go-users">Manage Users</button>
-            <button class="btn secondary" id="go-results">View Results</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Mocks -->
-      <section id="view-mocks" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <div>
-            <h1 style="margin:0;color:var(--primary); font-size:18px">Mocks</h1>
-            <div class="muted">All created mock tests</div>
-          </div>
-
-          <div style="display:flex;gap:8px;align-items:center">
-            <input id="filter-mocks" class="input" placeholder="Filter mocks..." style="width:200px"/>
-            <button class="btn" id="btn-create-mock">Create Mock</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <table class="table" id="mocks-table">
+        <div class="modal-body" id="modal-body">
+          <table class="records-table" id="records-table" role="grid" aria-label="PYQ records">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Questions</th>
-                <th>Time (min)</th>
-                <th>Active</th>
-                <th>Date</th>
-                <th>Syllabus</th>
-                <th>Actions</th>
+                <th style="width:36px">#</th>
+                <th>Image URL</th>
+                <th style="width:140px">Chapter</th>
+                <th style="width:80px">Year</th>
+                <th style="width:120px">Subject</th>
+                <th style="width:120px">Correct</th>
+                <th style="width:160px">QID (manual)</th>
+                <th style="width:70px"></th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="records-body"></tbody>
           </table>
-        </div>
-      </section>
 
-      <!-- Builder (compact) -->
-      <section id="view-builder" style="display:none;">
-        <h1 style="margin:0;color:var(--primary); font-size:18px">Mock Builder</h1>
-        <div class="muted" style="margin-top:6px">Create or edit mock tests. Auto-generate P/C/M rows.</div>
-
-        <div class="card" style="margin-top:10px">
-          <!-- Compact single-row form -->
-          <div class="builder-compact-row" style="margin-bottom:10px">
-            <div class="field" style="min-width:220px; flex:1;">
-              <label class="small-muted">Mock Name *</label>
-              <input id="mock-name" class="compact-input" placeholder="Mock Name" />
-            </div>
-
-            <div class="field" style="width:120px">
-              <label class="small-muted">Total Qs *</label>
-              <input id="mock-qns" type="number" class="compact-input" value="60" />
-            </div>
-
-            <div class="field" style="width:120px">
-              <label class="small-muted">Duration (min)</label>
-              <input id="mock-duration" type="number" class="compact-input" value="120" />
-            </div>
-
-            <div class="field" style="width:110px">
-              <label class="small-muted">Active</label>
-              <select id="mock-active" class="compact-select">
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-
-            <div class="field" style="width:160px">
-              <label class="small-muted">Date (optional)</label>
-              <input id="mock-date" type="date" class="compact-input" />
-            </div>
-
-            <div class="field" style="min-width:220px; flex:1;">
-              <label class="small-muted">Syllabus / Notes</label>
-              <input id="mock-syl" class="compact-input" placeholder="Syllabus or notes (Mechanics...)" />
-            </div>
-
-            <!-- Generate icon-only button -->
-            <div style="display:flex;align-items:end">
-              <button id="btn-generate" class="btn icon-only" title="Generate Rows (creates Q rows)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M12 2v4M12 18v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M2 12h4M18 12h4M4.2 19.8l2.8-2.8M17 7l2.8-2.8" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="12" r="3" stroke="#fff" stroke-width="1.6" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-            <div>
-              <div class="tabs">
-                <div class="tab active" data-sub="Physics" id="tab-physics">Physics</div>
-                <div class="tab" data-sub="Chemistry" id="tab-chem">Chemistry</div>
-                <div class="tab" data-sub="Mathematics" id="tab-math">Mathematics</div>
-              </div>
-              <div class="small-muted" style="margin-top:6px">Auto-generated QIDs (P1, C1, M1...)</div>
-            </div>
-
-            <div style="display:flex;gap:8px">
-              <button class="btn" id="import-pyqs-btn">Import from PYQs</button>
-              <button class="btn" id="save-mock">Save Mock</button>
-              <button class="btn secondary" id="save-and-close">Save & Close</button>
-            </div>
-          </div>
-
-          <div id="builder-area" style="margin-top:12px">
-            <div id="table-Physics" class="subject-table" style="display:block;">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th style="width:80px">QID</th>
-                    <th>Image Link</th>
-                    <th style="width:120px">Answer</th>
-                    <th style="width:100px">Preview</th>
-                    <th style="width:120px">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-Physics"></tbody>
-              </table>
-            </div>
-
-            <div id="table-Chemistry" class="subject-table" style="display:none;">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th style="width:80px">QID</th>
-                    <th>Image Link</th>
-                    <th style="width:120px">Answer</th>
-                    <th style="width:100px">Preview</th>
-                    <th style="width:120px">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-Chemistry"></tbody>
-              </table>
-            </div>
-
-            <div id="table-Mathematatics" class="subject-table" style="display:none;">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th style="width:80px">QID</th>
-                    <th>Image Link</th>
-                    <th style="width:120px">Answer</th>
-                    <th style="width:100px">Preview</th>
-                    <th style="width:120px">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-Mathematics"></tbody>
-              </table>
-            </div>
-
-          </div>
-
-          <div id="builder-status" class="small-muted" style="margin-top:8px"></div>
-        </div>
-      </section>
-
-      <!-- PYQs Database -->
-      <section id="view-pyqs" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <div>
-            <h1 style="margin:0;color:var(--primary); font-size:22px">PYQs Database</h1>
-            <div class="muted" style="margin-top:6px">Save and manage previous year questions (PYQs). Use Import to add into a mock.</div>
-          </div>
-
-          <div style="display:flex;gap:10px;align-items:center">
-            <input id="pyq-filter" class="input" placeholder="Search by chapter, year, url..." style="width:360px"/>
-            <button class="btn" id="btn-new-pyq">Add PYQ</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div class="filter-row pyq-controls" style="align-items:center">
-            <div style="display:flex;gap:10px;flex-wrap:wrap;width:100%">
-              <select id="pyq-filter-subject" class="select" style="width:180px">
-                <option value="">All subjects</option>
-                <option>Physics</option>
-                <option>Chemistry</option>
-                <option>Mathematics</option>
-              </select>
-
-              <select id="pyq-filter-chapter" class="select" style="width:220px">
-                <option value="">All chapters</option>
-              </select>
-
-              <input id="pyq-filter-year" class="input" placeholder="Year filter" style="width:120px"/>
-
-              <div style="display:flex;gap:10px;align-items:center;margin-left:auto">
-                <label class="small-muted" style="font-size:13px;margin-right:6px">Sort</label>
-                <select id="pyq-sort-by" class="select" style="width:160px;">
-                  <option value="createdAt">Created</option>
-                  <option value="year">Year</option>
-                </select>
-
-                <div class="sort-toggle" title="Toggle order (Asc / Desc)">
-                  <button id="sort-asc" class="active" aria-pressed="true" title="Ascending">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg>
-                  </button>
-                  <button id="sort-desc" aria-pressed="false" title="Descending">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9l-7 7-7-7"/></svg>
-                  </button>
-                </div>
-
-                <button class="btn secondary" id="btn-refresh-pyqs">Refresh</button>
-              </div>
-            </div>
-
-            <div class="muted-small" style="margin-left:auto">Total: <span id="pyq-count">0</span></div>
-          </div>
-
-          <!-- cards grid -->
-          <div id="pyq-cards-wrapper" style="margin-top:12px">
-            <div class="pyq-cards" id="pyq-cards"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Users -->
-      <section id="view-users" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <div>
-            <h1 style="margin:0;color:var(--primary); font-size:18px">Users</h1>
-            <div class="muted">Manage student & admin accounts</div>
-          </div>
-
-          <button class="btn" id="btn-add-user">Add User</button>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <table class="table" id="users-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Created</th>
-                <th style="width:160px">Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Results -->
-      <section id="view-results" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <div>
-            <h1 style="margin:0;color:var(--primary); font-size:18px">Results</h1>
-            <div class="muted">Student attempts & scores</div>
-          </div>
-
-          <input class="input" id="filter-results" placeholder="Filter results..." style="width:220px"/>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <table class="table" id="results-table">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Mock</th>
-                <th>Score</th>
-                <th>Date</th>
-                <th>Duration</th>
-                <th style="width:220px">Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- SETTINGS (for superadmin): manage admins & visible tabs -->
-      <section id="view-settings" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <div>
-            <h1 style="margin:0;color:var(--primary); font-size:18px">Settings</h1>
-            <div class="muted">Manage admin accounts and which tabs they can see</div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <h3 style="margin:0 0 8px 0">Create new admin</h3>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input id="new-admin-username" class="input" placeholder="username" style="width:160px"/>
-            <input id="new-admin-name" class="input" placeholder="name" style="width:220px"/>
-            <input id="new-admin-password" class="input" placeholder="password" style="width:160px"/>
-            <select id="new-admin-permission" class="select" style="width:160px">
-              <option value="admin">admin</option>
-              <option value="superadmin">superadmin</option>
-            </select>
-            <div>
-              <label class="small-muted" style="display:block;font-weight:600;margin-bottom:6px">Visible tabs</label>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <label><input type="checkbox" class="new-admin-tab" value="dashboard"/> Dashboard</label>
-                <label><input type="checkbox" class="new-admin-tab" value="mocks"/> Mocks</label>
-                <label><input type="checkbox" class="new-admin-tab" value="builder"/> Builder</label>
-                <label><input type="checkbox" class="new-admin-tab" value="pyqs"/> PYQs</label>
-                <label><input type="checkbox" class="new-admin-tab" value="users"/> Users</label>
-                <label><input type="checkbox" class="new-admin-tab" value="results"/> Results</label>
-                <label><input type="checkbox" class="new-admin-tab" value="settings"/> Settings</label>
-              </div>
-            </div>
-            <button id="create-admin" class="btn">Create Admin</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <h3 style="margin:0 0 8px 0">Existing admins</h3>
-          <div id="admins-list">
-            <div class="small-muted" style="padding:12px">Loading...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ADD PYQ MODAL (also used for edit) -->
-      <div id="modal-add-pyq" style="display:none;">
-        <div class="modal-backdrop" role="dialog" aria-modal="true">
-          <div class="modal-card" role="document" aria-labelledby="add-pyq-title">
-            <h2 style="margin:0;font-size:18px" id="add-pyq-title">Add PYQ</h2>
-            <div class="muted" style="margin-top:6px">Save previous year question to the database</div>
-
-            <div style="margin-top:14px">
-              <label class="small-muted">Image URL *</label>
-              <input id="pyq-image" class="input" placeholder="https://..." />
-            </div>
-
-            <div style="margin-top:12px" class="modal-grid">
-              <div class="field">
-                <label class="small-muted">Chapter</label>
-                <input id="pyq-chapter" class="input" placeholder="Chapter name" />
-              </div>
-
-              <div class="field">
-                <label class="small-muted">Year</label>
-                <input id="pyq-year" class="input" placeholder="2024" />
-              </div>
-
-              <div class="field">
-                <label class="small-muted">Subject</label>
-                <select id="pyq-subject" class="select">
-                  <option>Physics</option><option>Chemistry</option><option>Mathematics</option>
-                </select>
-              </div>
-
-              <!-- NEW: Correct option select -->
-              <div class="field">
-                <label class="small-muted">Correct Option</label>
-                <select id="pyq-correct" class="select">
-                  <option value="">—</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                  <option value="D">D</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
-              <button class="btn secondary" id="close-add-pyq">Cancel</button>
-              <button class="btn" id="save-pyq">Save</button>
-            </div>
-
-            <div id="add-pyq-status" class="small-muted" style="margin-top:8px"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- IMPORT PYQs MODAL (from builder) - FULLSCREEN CARD VIEW -->
-      <div id="modal-import-pyqs" style="display:none;">
-        <div class="modal-backdrop" role="dialog" aria-modal="true">
-          <div class="import-full" role="document" aria-labelledby="import-title">
-            <div class="import-top">
-              <div style="display:flex;gap:12px;align-items:center">
-                <h2 id="import-title" style="margin:0;font-size:18px">Import PYQs into Builder</h2>
-                <div class="muted-small">Insert into:
-                  <select id="import-target-section" class="select" style="margin-left:8px">
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Mathematics">Mathematics</option>
-                  </select>
-                </div>
-                <div style="margin-left:8px;color:var(--muted);font-size:13px">Selected: <strong id="import-selected-count">0</strong></div>
-              </div>
-
-              <div style="display:flex;gap:8px;align-items:center">
-                <button class="btn secondary" id="close-import-pyqs" title="Close">Close</button>
-              </div>
-            </div>
-
-            <div class="import-filters">
-              <select id="import-filter-subject" class="select" style="width:160px">
-                <option value="">Any subject</option>
-                <option>Physics</option>
-                <option>Chemistry</option>
-                <option>Mathematics</option>
-              </select>
-
-              <select id="import-filter-chapter" class="select" style="width:260px">
-                <option value="">Any chapter</option>
-              </select>
-
-              <input id="import-filter-year" class="input" placeholder="Year" style="width:120px"/>
-              <input id="import-filter-q" class="input" placeholder="Search url or chapter" style="width:300px" />
-
-              <label class="small-muted" style="margin-left:auto">Sort</label>
-              <select id="import-sort-by" class="select" style="width:160px;">
-                <option value="createdAt">Created</option>
-                <option value="year">Year</option>
-              </select>
-
-              <div class="sort-toggle" title="Toggle order (Asc / Desc)">
-                <button id="import-sort-asc" class="active" aria-pressed="true" title="Ascending">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg>
-                </button>
-                <button id="import-sort-desc" aria-pressed="false" title="Descending">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9l-7 7-7-7"/></svg>
-                </button>
-              </div>
-
-              <button class="btn" id="import-refresh">Search</button>
-            </div>
-
-            <div style="padding:12px; overflow:auto; flex:1;">
-              <div id="import-pyq-cards" class="pyq-cards"></div>
-            </div>
-
-            <div style="padding:12px;border-top:1px solid rgba(0,0,0,0.04);display:flex;justify-content:flex-end;gap:8px;align-items:center">
-              <button class="btn secondary" id="import-clear-selection">Clear</button>
-              <button class="btn" id="import-insert-selected">Insert Selected into Builder</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ATTEMPT MODAL -->
-      <div id="modal-attempt" style="display:none;">
-        <div class="modal-backdrop" role="dialog" aria-modal="true">
-          <div class="modal-card" style="width:920px;max-width:96%;">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <h2 style="margin:0;font-size:16px">Attempt Details</h2>
-              <div style="display:flex;gap:8px;align-items:center">
-                <button class="btn secondary" id="download-attempt">Export</button>
-                <button class="btn secondary" id="close-attempt">Close</button>
-              </div>
-            </div>
-            <div class="muted" style="margin-bottom:10px">Per-question performance</div>
-            <div class="modal-body" id="attempt-details" style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap"></div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /content -->
-  </main>
-</div><!-- /app -->
-
-<!-- LOGIN FULLSCREEN COMPONENT -->
-<div id="modal-login" aria-hidden="true" role="dialog">
-  <div class="login-card">
-    <div class="login-left">
-      <div class="brand">
-        <div class="mark"><img src="favicon.png" alt="logo" style="width:36px;height:36px;border-radius:8px"/></div>
-        <div>
-          <h2>PROYAX Admin</h2>
-          <div class="tagline">Manage mocks, PYQs and users — fast & focused.</div>
-        </div>
-      </div>
-      <div style="margin-top:8px">
-        <div style="font-weight:700;font-size:18px">Welcome back</div>
-        <div class="muted" style="margin-top:6px">Sign in to access admin tools. Your session will persist across refresh until you sign out.</div>
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:18px">
-        <div class="chip">Secure</div>
-        <div class="chip">Fast</div>
-        <div class="chip">Simple</div>
-      </div>
-
-    </div>
-
-    <div class="login-right">
-      <div>
-        <div class="login-title">Sign in</div>
-        <div class="login-desc">Enter your admin username and password.</div>
-      </div>
-
-      <div class="login-form" role="form" aria-labelledby="login-title">
-        <input id="login-username" class="input-lg" placeholder="Username" autocomplete="username" />
-        <input id="login-password" class="input-lg" placeholder="Password" type="password" autocomplete="current-password" />
-        <div id="login-error">Invalid credentials</div>
-
-        <div class="login-actions">
-          <button id="login-submit" class="btn">Sign in</button>
-          <button id="login-demo" class="btn secondary" title="Demo login (local)" style="display:none">Demo</button>
-        </div>
-
-        <div class="oauth-hint">Tip: Use admin accounts stored in Firestore collection <code>admins</code>.</div>
-        <div class="login-footer">
-          <div>Need help? Contact the owner.</div>
+          <div id="records-empty" class="small-muted" style="padding:10px; display:none">No rows yet. Click the + icon to create a record.</div>
+          <div id="records-status" class="small-muted" style="margin-top:8px"></div>
+          <div style="height:16px"></div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- FIREBASE SDK (compat) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <!-- PROGRESS MODAL -->
+  <div id="progress-root" aria-hidden="true">
+    <div class="progress-backdrop" role="dialog" aria-modal="true">
+      <div class="progress-card" role="document" aria-labelledby="progress-title">
+        <div class="progress-header">
+          <div style="display:flex;gap:12px;align-items:center;">
+            <h3 id="progress-title" style="margin:0;font-size:15px">PYQ Progress — Question coverage (Q# 1–120)</h3>
+            <div class="legend" style="margin-left:6px">
+              <div style="display:flex;align-items:center;gap:6px"><span class="dot dot-ok"></span> Added</div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="dot dot-miss"></span> Missing</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div id="progress-status" class="small-muted">Loading...</div>
+            <button id="close-progress" class="btn secondary" title="Close progress" aria-label="Close progress" style="padding:6px 8px; font-size:13px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true">
+                <path d="M18 6L6 18"></path><path d="M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="progress-body" id="progress-body">
+          <!-- table will be inserted here -->
+          <div class="small-muted">Preparing...</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<script>
-/* =========================
-   FIREBASE CONFIG
-   ========================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyBOVl1hdmprJXpgdN_sNTO3FsNePD_zNZY",
-  authDomain: "aahes-cee-cutoffs.firebaseapp.com",
-  projectId: "aahes-cee-cutoffs"
-};
-let db = null;
-try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-  console.log('Firestore initialized');
-} catch (e) {
-  console.warn('Firestore init failed', e);
-}
+  <!-- PREVIEW (existing) -->
+  <div id="modal-preview" style="display:none; position:fixed; inset:0; z-index:2147483620; pointer-events:auto;">
+    <div class="preview-backdrop" role="dialog" aria-modal="true">
+      <div class="preview-card" role="document" aria-labelledby="preview-title">
+        <div style="width:100%; display:flex; justify-content:flex-end;">
+          <button id="close-preview" class="btn secondary" title="Close preview" aria-label="Close preview" style="padding:6px 8px; font-size:13px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true">
+              <path d="M18 6L6 18"></path><path d="M6 6l12 12"></path>
+            </svg>
+            <span class="btn-label visually-hidden">Close</span>
+          </button>
+        </div>
+        <div id="preview-body" style="width:100%; display:flex; align-items:center; justify-content:center; overflow:auto;"></div>
+      </div>
+    </div>
+  </div>
 
-/* =========================
-   Utilities & helpers
-   ========================= */
-function el(id){ return document.getElementById(id); }
-function qs(sel){ return document.querySelector(sel); }
-function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
-function escapeHtml(str){ if(str==null) return ''; return String(str).replace(/[&<>"']/g, function(m){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]; }); }
-function formatDateField(field){
-  if(!field) return '-';
-  try{
-    if(field.toDate) return field.toDate().toLocaleDateString();
-    return new Date(field).toLocaleDateString();
-  }catch(e){ return String(field); }
-}
+  <!-- APP (existing) -->
+  <div class="app-scale" id="app-scale">
+    <main role="main" aria-label="PYQs Database - Light Emerald">
+      <div class="topbar" style="align-items:flex-start;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="btn-new-pyq" class="btn" title="Add PYQ" aria-label="Add PYQ" style="display:inline-flex; gap:8px; align-items:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+              <path d="M12 5v14"></path><path d="M5 12h14"></path>
+            </svg>
+            <span class="btn-label visually-hidden">Add PYQ</span>
+          </button>
 
-/* =========================
-   AUTH / LOGIN & PERMISSIONS (with session persistence)
-   ========================= */
-let currentAdmin = null; // filled after login
-const ALL_VIEWS = ['dashboard','mocks','builder','pyqs','users','results','settings'];
-const STORAGE_KEY = 'proyax_admin';
+          <button id="btn-refresh-pyqs" class="btn secondary" title="Refresh list" aria-label="Refresh" style="display:inline-flex; gap:8px; align-items:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+              <path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M20.49 9A9 9 0 1 0 4 20.49"></path>
+            </svg>
+            <span class="btn-label visually-hidden">Refresh</span>
+          </button>
 
-// attempt to restore session from localStorage
-(function tryRestoreSession(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const data = JSON.parse(raw);
-      if(data && data.username){
-        // set as current admin
-        currentAdmin = data;
-        applyPermissionsAndRenderNav(currentAdmin);
-        // hide login and show first allowed view
-        closeLoginModal(false);
-        const firstNav = qsa('.nav-item').find(n => n.style.display !== 'none');
-        if(firstNav) showView(firstNav.dataset.view);
+          <!-- NEW: Progress button (icon only) -->
+          <button id="btn-progress" class="btn ghost" title="Progress" aria-label="Progress" style="display:inline-flex; gap:6px; align-items:center; padding:8px;">
+            <!-- compact progress / grid icon -->
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+            <span class="visually-hidden">Progress</span>
+          </button>
+
+        </div>
+
+        <div class="controls" style="margin-left:8px;">
+          <select id="pyq-filter-subject" class="select" style="width:140px">
+            <option value="">All subjects</option>
+            <option>Physics</option><option>Chemistry</option><option>Mathematics</option>
+          </select>
+
+          <select id="pyq-filter-chapter" class="select" style="width:200px">
+            <option value="">All chapters</option>
+          </select>
+
+          <input id="pyq-filter-year" class="input" placeholder="Year" style="width:96px"/>
+
+          <input id="pyq-filter" class="input" placeholder="Search chapter, year, url..." style="min-width:240px; flex:1"/>
+
+          <label class="small-muted" style="margin-left:6px; align-self:center">Sort</label>
+          <select id="pyq-sort-by" class="select" style="width:140px;">
+            <option value="createdAt">Created</option>
+            <option value="year">Year</option>
+          </select>
+
+          <div class="sort-toggle" title="Toggle order (Asc / Desc)" style="margin-left:6px">
+            <button id="sort-asc" class="active" aria-pressed="true" title="Ascending" style="width:30px;height:28px;border-radius:6px;background:transparent;border:1px solid rgba(10,10,10,0.04);">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#2fbf7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg>
+            </button>
+            <button id="sort-desc" aria-pressed="false" title="Descending" style="width:30px;height:28px;border-radius:6px;background:transparent;border:1px solid rgba(10,10,10,0.04); margin-left:6px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#2fbf7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          </div>
+
+          <div class="small-muted" style="margin-left:10px">Total: <strong id="pyq-count">0</strong></div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div id="pyq-cards-wrapper" style="width:100%; padding:6px 8px 40px 8px;">
+        <div class="pyq-cards" id="pyq-cards" aria-live="polite"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- FIREBASE SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    /* FIREBASE CONFIG */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBOVl1hdmprJXpgdN_sNTO3FsNePD_zNZY",
+      authDomain: "aahes-cee-cutoffs.firebaseapp.com",
+      projectId: "aahes-cee-cutoffs"
+    };
+    let db = null;
+    try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); console.log('Firestore initialized'); } catch (e) { console.warn('Firestore init failed', e); }
+
+    function el(id){ return document.getElementById(id); }
+    function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
+    function escapeHtml(str){ if(str==null) return ''; return String(str).replace(/[&<>"']/g, function(m){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]; }); }
+
+    const modalRoot = el('modal-root');
+    const modalBackdrop = el('modal-backdrop');
+    const modalBody = el('modal-body');
+    const previewRoot = el('modal-preview');
+
+    const records = [];
+    let editingDocId = null;
+    const pyqCardsContainer = el('pyq-cards');
+    const pyqCountEl = el('pyq-count');
+    const recordsBody = el('records-body');
+    const recordsEmpty = el('records-empty');
+    const recordsStatus = el('records-status');
+
+    /* wiring */
+    el('btn-new-pyq')?.addEventListener('click', ()=> openRecordsModal());
+    el('btn-refresh-pyqs')?.addEventListener('click', ()=> loadPyqsList());
+    el('pyq-filter')?.addEventListener('input', ()=> loadPyqsList());
+    el('pyq-filter-subject')?.addEventListener('change', ()=> { populateChapterFilter(el('pyq-filter-subject').value); loadPyqsList(); });
+    el('pyq-filter-chapter')?.addEventListener('change', ()=> loadPyqsList());
+    el('pyq-filter-year')?.addEventListener('input', ()=> loadPyqsList());
+
+    // Progress button wiring
+    el('btn-progress')?.addEventListener('click', ()=> openProgressModal());
+    el('close-progress')?.addEventListener('click', ()=> closeProgressModal());
+
+    function setSortOrder(isAsc){
+      if(isAsc){
+        el('sort-asc').classList.add('active'); el('sort-asc').setAttribute('aria-pressed','true');
+        el('sort-desc').classList.remove('active'); el('sort-desc').setAttribute('aria-pressed','false');
       } else {
-        showLoginModal();
+        el('sort-desc').classList.add('active'); el('sort-desc').setAttribute('aria-pressed','true');
+        el('sort-asc').classList.remove('active'); el('sort-asc').setAttribute('aria-pressed','false');
       }
-    } else {
-      showLoginModal();
     }
-  }catch(e){
-    console.error('restore session', e);
-    showLoginModal();
-  }
-})();
+    el('sort-asc')?.addEventListener('click', ()=> { setSortOrder(true); loadPyqsList(); });
+    el('sort-desc')?.addEventListener('click', ()=> { setSortOrder(false); loadPyqsList(); });
 
-function saveSessionToStorage(adminObj){
-  if(!adminObj) { localStorage.removeItem(STORAGE_KEY); return; }
-  // Only store non-sensitive fields — do NOT store password
-  const safe = {
-    id: adminObj.id || adminObj.uid || null,
-    username: adminObj.username,
-    name: adminObj.name || adminObj.username,
-    permission: adminObj.permission || 'admin',
-    visibleTabs: Array.isArray(adminObj.visibleTabs) ? adminObj.visibleTabs : (adminObj.visibleTabs ? JSON.parse(JSON.stringify(adminObj.visibleTabs || [])) : [])
+    el('add-row-btn')?.addEventListener('click', ()=> addRecordRow());
+    el('cancel-records')?.addEventListener('click', ()=> { closeRecordsModal(); });
+    el('submit-records')?.addEventListener('click', ()=> submitRecords());
+    el('close-preview')?.addEventListener('click', ()=> closePreviewModal());
+
+    function disablePageScroll(){ document.documentElement.classList.add('no-scroll'); document.body.classList.add('no-scroll'); }
+    function enablePageScroll(){ document.documentElement.classList.remove('no-scroll'); document.body.classList.remove('no-scroll'); }
+
+    function openRecordsModal(editDoc){
+      // reset state
+      records.length = 0;
+      editingDocId = null;
+      recordsBody.innerHTML = '';
+      recordsStatus.textContent = '';
+
+      modalRoot.style.display = 'block';
+      modalRoot.setAttribute('aria-hidden','false');
+      document.body.classList.add('modal-active');
+      disablePageScroll();
+
+      if(editDoc && editDoc.id){
+        editingDocId = editDoc.id;
+        addRecordRow({
+          imageUrl: editDoc.imageUrl || '',
+          chapter: editDoc.chapter || '',
+          year: editDoc.year || '',
+          subject: editDoc.subject || 'Physics',
+          correct: editDoc.correct || '',
+          qid: editDoc.qid || ''
+        });
+        el('add-pyq-title').textContent = 'Edit PYQ';
+        const lbl = el('submit-records').querySelector('.btn-label');
+        if(lbl) lbl.textContent = 'Save';
+        el('add-row-btn').style.display = 'none';
+      } else {
+        el('add-pyq-title').textContent = 'Add PYQ Records';
+        const lbl = el('submit-records').querySelector('.btn-label');
+        if(lbl) lbl.textContent = 'Add all';
+        el('add-row-btn').style.display = '';
+        addRecordRow(); // create blank row but do NOT auto-generate qid
+      }
+
+      setTimeout(()=> {
+        const first = modalRoot.querySelector('.record-input');
+        if(first) first.focus();
+      }, 40);
+      renderRecords();
+    }
+
+    function closeRecordsModal(){
+      modalRoot.style.display = 'none';
+      modalRoot.setAttribute('aria-hidden','true');
+      records.length = 0;
+      editingDocId = null;
+      recordsBody.innerHTML = '';
+      document.body.classList.remove('modal-active');
+      enablePageScroll();
+    }
+function getLastRecordDefaults(){
+  if(records.length === 0) return null;
+
+  const last = records[records.length - 1];
+
+  return {
+    year: last.year || '',
+    subject: last.subject || 'Physics',
+    qid: last.qid || ''
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
 }
 
-/* Login UI helpers */
-function showLoginModal(){
-  el('modal-login').style.display = 'flex';
-  el('modal-login').setAttribute('aria-hidden','false');
-  // ensure inputs cleared for security
-  el('login-password').value = '';
-  el('login-error').style.display = 'none';
-  // hide nav items and content until login (we do this to block UI)
-  qsa('.nav-item').forEach(n => n.style.display = 'none');
-  qsa('.nav-item').forEach(n => n.classList.remove('active'));
-  qsa('main .content section').forEach(s => s.style.display = 'none');
-  // prevent body scroll
-  document.documentElement.style.overflow = 'hidden';
-  document.body.style.overflow = 'hidden';
+function getNextNumericQid(prevQid){
+  if(!prevQid) return '';
+  if(!/^\d+$/.test(String(prevQid).trim())) return '';
+  return String(parseInt(prevQid, 10) + 1);
 }
 
-function closeLoginModal(restoreScroll=true){
-  el('modal-login').style.display = 'none';
-  el('modal-login').setAttribute('aria-hidden','true');
-  if(restoreScroll){
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
-  }
-  // allow nav pointer events
-  qsa('.nav-item').forEach(n => n.style.pointerEvents = '');
+    function addRecordRow(prefill){
+  const defaults = getLastRecordDefaults();
+
+  const tmpId = 'r' + Math.random().toString(36).slice(2,9);
+
+  const rec = {
+    imageUrl: prefill?.imageUrl || '',
+    chapter: prefill?.chapter || '',
+    year: prefill?.year 
+          || defaults?.year 
+          || '',
+    subject: prefill?.subject 
+          || defaults?.subject 
+          || 'Physics',
+    correct: prefill?.correct || '',
+    qid: prefill?.qid 
+        || getNextNumericQid(defaults?.qid),
+    tmpId
+  };
+
+  records.push(rec);
+
+  renderRecords();
+
+  setTimeout(()=> {
+    const rowEl = document.getElementById('row-'+tmpId);
+    if(rowEl) rowEl.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 80);
+
+  return rec;
 }
 
-/* Sign-in (check admins collection) */
-async function signInWithLocalAdmins(username, password){
-  if(!db){
-    // local fallback (demo accounts)
-    if(username === 'super' && password === 'super') {
-      return { username:'super', name:'Local Super', permission:'superadmin' };
-    } else if(username === 'admin' && password === 'admin'){
-      return { username:'admin', name:'Local Admin', permission:'admin' };
-    } else {
+
+    function removeRecordRow(tmpId){
+      const idx = records.findIndex(r => r.tmpId === tmpId);
+      if(idx === -1) return;
+      records.splice(idx,1);
+      renderRecords();
+    }
+
+    function renderRecords(){
+      // re-render rows (only called on structural changes like add/remove or after submit)
+      recordsBody.innerHTML = '';
+      if(records.length === 0){
+        recordsEmpty.style.display = '';
+      } else {
+        recordsEmpty.style.display = 'none';
+      }
+      records.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.id = 'row-'+r.tmpId;
+        tr.innerHTML = `
+          <td style="width:36px; padding:6px; font-weight:700">${i+1}</td>
+          <td style="padding:6px;">
+            <input class="record-input" data-field="imageUrl" data-id="${r.tmpId}" placeholder="https://..." value="${escapeHtml(r.imageUrl)}" style="width:100%"/>
+          </td>
+          <td style="padding:6px;"><input class="record-input" data-field="chapter" data-id="${r.tmpId}" value="${escapeHtml(r.chapter)}" placeholder="Chapter" style="width:100%"/></td>
+          <td style="padding:6px;"><input class="record-input" data-field="year" data-id="${r.tmpId}" value="${escapeHtml(r.year)}" placeholder="Year" style="width:100%"/></td>
+          <td style="padding:6px;">
+            <select class="record-input" data-field="subject" data-id="${r.tmpId}" style="width:100%">
+              <option ${r.subject==='Physics' ? 'selected':''}>Physics</option>
+              <option ${r.subject==='Chemistry' ? 'selected':''}>Chemistry</option>
+              <option ${r.subject==='Mathematics' ? 'selected':''}>Mathematics</option>
+            </select>
+          </td>
+          <td style="padding:6px;">
+            <div class="abcd-group" data-id="${r.tmpId}">
+              <button type="button" class="abcd-btn ${r.correct==='A' ? 'active':''}" data-opt="A" data-id="${r.tmpId}">A</button>
+              <button type="button" class="abcd-btn ${r.correct==='B' ? 'active':''}" data-opt="B" data-id="${r.tmpId}">B</button>
+              <button type="button" class="abcd-btn ${r.correct==='C' ? 'active':''}" data-opt="C" data-id="${r.tmpId}">C</button>
+              <button type="button" class="abcd-btn ${r.correct==='D' ? 'active':''}" data-opt="D" data-id="${r.tmpId}">D</button>
+            </div>
+          </td>
+          <td style="padding:6px;"><input class="record-input" data-field="qid" data-id="${r.tmpId}" value="${escapeHtml(r.qid)}" placeholder="Type QID (manual) or leave blank" style="width:100%"/></td>
+          <td style="padding:6px; text-align:center;"><button class="row-remove" data-id="${r.tmpId}" title="Remove row" aria-label="Remove row">✕</button></td>
+        `;
+        recordsBody.appendChild(tr);
+      });
+
+      // attach event handlers once (and rely on in-place edits)
+      // inputs: we use 'input' listeners but DO NOT re-render the whole table on each input.
+      qsa('.record-input').forEach(inp=>{
+        // avoid duplicate listeners
+        inp.removeEventListener('input', recordInputHandler);
+        inp.addEventListener('input', recordInputHandler);
+      });
+      // abcd buttons - toggle classes and set model without re-render
+      qsa('.abcd-btn').forEach(b=>{
+        b.removeEventListener('click', abcdClickHandler);
+        b.addEventListener('click', abcdClickHandler);
+      });
+      qsa('.row-remove').forEach(b=>{
+        b.removeEventListener('click', rowRemoveHandler);
+        b.addEventListener('click', rowRemoveHandler);
+      });
+    }
+
+    // IMPORTANT: do NOT call renderRecords() inside this handler to avoid losing caret.
+    function recordInputHandler(e){
+      const id = e.target.dataset.id;
+      const field = e.target.dataset.field;
+      const rec = records.find(r => r.tmpId === id);
+      if(!rec) return;
+      // update model in-place
+      rec[field] = e.target.value;
+      // if user changes subject, we do NOT auto-change qid. keep qid manual.
+      // only call renderRecords on structural changes (add/remove) or when necessary.
+    }
+
+    function abcdClickHandler(e){
+      const id = e.currentTarget.dataset.id;
+      const opt = e.currentTarget.dataset.opt;
+      // update model
+      const rec = records.find(r => r.tmpId === id);
+      if(!rec) return;
+      rec.correct = opt;
+      // update button classes in DOM directly (no re-render)
+      const group = document.querySelector(`.abcd-group[data-id="${id}"]`);
+      if(group){
+        group.querySelectorAll('.abcd-btn').forEach(btn => btn.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+      }
+    }
+
+    function rowRemoveHandler(e){
+      const id = e.currentTarget.dataset.id;
+      removeRecordRow(id);
+    }
+
+    /* QID generation helper (used only at submit time if qid left blank) */
+    function generateBatchQIDsFor(recordsArray){
+      const suffix = String(Date.now()).slice(-6);
+      return recordsArray.map((r, idx) => {
+        const initial = (r.subject && r.subject[0]) ? String(r.subject[0]).toUpperCase() : 'X';
+        const index = String(idx+1).padStart(2, '0');
+        return `${initial}${suffix}${index}`;
+      });
+    }
+
+    /* Submit records - generate QIDs only for rows that have no qid (so manual QID preserved) */
+    async function submitRecords(){
+      const submitBtn = el('submit-records');
+      const submitLabel = submitBtn.querySelector('.btn-label');
+      if(editingDocId){
+        if(records.length === 0) return alert('No record to save');
+        const r = records[0];
+        if(!r.imageUrl) return alert('Image URL required');
+        try{
+          if(submitLabel) submitLabel.textContent = 'Saving...';
+          submitBtn.disabled = true;
+          const docRef = db.collection('pyqs').doc(editingDocId);
+          const docSnap = await docRef.get();
+          let existingQid = '';
+          if(docSnap.exists){
+            existingQid = docSnap.data().qid || '';
+          }
+          // prefer existingQid (existing doc), then user-typed qid, then auto-generate
+          const qidToWrite = existingQid || (r.qid && r.qid.trim() ? r.qid.trim() : generateBatchQIDsFor([r])[0]);
+
+          await docRef.update({
+            imageUrl: r.imageUrl,
+            chapter: r.chapter || '',
+            year: r.year || '',
+            subject: r.subject || '',
+            correct: r.correct || '',
+            qid: qidToWrite,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          closeRecordsModal();
+          loadPyqsList();
+        }catch(e){ console.error('update pyq', e); alert('Update failed'); }
+        finally { submitBtn.disabled = false; if(submitLabel) submitLabel.textContent = 'Save'; }
+      } else {
+        if(records.length === 0) return alert('No records to add');
+        const invalid = records.find(r=> !r.imageUrl || r.imageUrl.trim()==='');
+        if(invalid) return alert('Every row must have an Image URL');
+        try{
+          if(submitLabel) submitLabel.textContent = 'Adding...';
+          submitBtn.disabled = true;
+
+          // generate QIDs only for rows that don't have one (preserve manual)
+          const missingIdxs = [];
+          const toGenerate = [];
+          records.forEach((r, idx) => {
+            if(!r.qid || String(r.qid).trim()===''){
+              missingIdxs.push(idx);
+              toGenerate.push({...r, subject: r.subject || 'X'});
+            }
+          });
+          const generated = generateBatchQIDsFor(toGenerate);
+          missingIdxs.forEach((origIdx, j)=>{
+            records[origIdx].qid = generated[j];
+          });
+
+          if(db && db.collection){
+            await Promise.all(records.map((r) => {
+              const doc = {
+                imageUrl: r.imageUrl,
+                chapter: r.chapter || '',
+                year: r.year || '',
+                subject: r.subject || '',
+                correct: r.correct || '',
+                qid: r.qid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              };
+              return db.collection('pyqs').add(doc);
+            }));
+          } else {
+            console.log('Would add records with QIDs:', records.map((r)=> ({...r})));
+          }
+          recordsStatus.textContent = `Added ${records.length} records`;
+          closeRecordsModal();
+          loadPyqsList();
+        }catch(e){ console.error('add records', e); alert('Add failed: '+ (e.message || e)); }
+        finally { submitBtn.disabled = false; if(submitLabel) submitLabel.textContent = 'Add all'; }
+      }
+    }
+
+    /* Preview helpers */
+    function openPreviewModal(imageUrl, title){
+      previewRoot.style.display = 'block';
+      disablePageScroll();
+      const body = el('preview-body');
+      body.innerHTML = `<div style="max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title||'PYQ')}" style="max-width:92vw;max-height:80vh;display:block;border-radius:6px; background:#fff" onerror="this.style.opacity=.4;"/></div>`;
+    }
+    function closePreviewModal(){
+      previewRoot.style.display = 'none';
+      enablePageScroll();
+      el('preview-body').innerHTML = '';
+    }
+
+    /* Helper: extract question number from QID (tries several heuristics)
+       - Preferred: trailing 1-3 digits at end of QID (e.g. P12345601 -> 1)
+       - Else: any 1-3 digit number inside QID (first/best candidate)
+       - Returns integer or null if can't find */
+    function extractQNoFromQid(qid){
+      if(!qid || typeof qid !== 'string') return null;
+      // Trim and remove non-printable
+      const s = qid.trim();
+      // 1) trailing digits (1-3)
+      let m = s.match(/(\d{1,3})$/);
+      if(m) {
+        const v = parseInt(m[1], 10);
+        if(!isNaN(v) && v >= 1 && v <= 120) return v;
+      }
+      // 2) look for a group like '_12' or '-12' or 'q12' etc.
+      m = s.match(/(?:_|-|\b|q|Q)(\d{1,3})\b/);
+      if(m){
+        const v = parseInt(m[1], 10);
+        if(!isNaN(v) && v >= 1 && v <= 120) return v;
+      }
+      // 3) any 1-3 digits anywhere - choose the last occurrence (often question number at end)
+      const all = s.match(/\d{1,3}/g);
+      if(all && all.length){
+        for(let i = all.length - 1; i >= 0; --i){
+          const v = parseInt(all[i], 10);
+          if(!isNaN(v) && v >= 1 && v <= 120) return v;
+        }
+      }
       return null;
     }
-  }
-  try{
-    const snap = await db.collection('admins').where('username','==',username).limit(1).get();
-    if(snap.empty) return null;
-    const doc = snap.docs[0];
-    const data = doc.data();
-    // plaintext password check (legacy) — replace with Firebase Auth for production
-    if((data.password||'').trim() === (password||'').trim()){
-      data.id = doc.id;
-      return data;
-    }
-    return null;
-  }catch(e){
-    console.error('signIn error', e);
-    return null;
-  }
-}
 
-/* apply permissions to nav + left panel */
-function applyPermissionsAndRenderNav(admin){
-  let allowed = [];
-  if(admin.permission === 'superadmin'){
-    allowed = ALL_VIEWS.slice();
-  } else if(Array.isArray(admin.visibleTabs) && admin.visibleTabs.length){
-    allowed = admin.visibleTabs.slice();
-  } else {
-    allowed = ['dashboard','pyqs'];
-  }
-
-  qsa('.nav-item').forEach(n => {
-    const view = n.dataset.view;
-    if(allowed.includes(view)){
-      n.style.display = '';
-    } else {
-      n.style.display = 'none';
-    }
-  });
-
-  if(admin.permission !== 'superadmin'){
-    const settingsNav = qsa('.nav-item[data-view="settings"]')[0];
-    if(settingsNav) settingsNav.style.display = 'none';
-  }
-
-  el('admin-name').textContent = admin.name || admin.username || 'Admin';
-  el('admin-role').textContent = admin.permission || 'admin';
-  el('btn-signout').style.display = '';
-}
-
-/* Sign out: remove session and show login */
-function signOut(){
-  if(!confirm('Sign out?')) return;
-  currentAdmin = null;
-  saveSessionToStorage(null);
-  el('admin-name').textContent = 'Admin';
-  el('admin-role').textContent = 'superuser';
-  el('btn-signout').style.display = 'none';
-  // hide nav and show login
-  qsa('.nav-item').forEach(n => n.style.display = 'none');
-  showLoginModal();
-}
-
-/* Login button handlers */
-el('login-submit')?.addEventListener('click', async () => {
-  const username = el('login-username').value.trim();
-  const password = el('login-password').value.trim();
-  if(!username || !password){ el('login-error').textContent = 'Enter username and password'; el('login-error').style.display = ''; return; }
-  el('login-error').style.display = 'none';
-  el('login-submit').textContent = 'Signing in...'; el('login-submit').disabled = true;
-  try{
-    const adminData = await signInWithLocalAdmins(username, password);
-    if(!adminData){ el('login-error').textContent = 'Invalid credentials'; el('login-error').style.display = ''; return; }
-    currentAdmin = adminData;
-    if(currentAdmin.visibleTabs && !Array.isArray(currentAdmin.visibleTabs)) {
-      try{ currentAdmin.visibleTabs = JSON.parse(currentAdmin.visibleTabs); } catch(e){ currentAdmin.visibleTabs = []; }
-    }
-    applyPermissionsAndRenderNav(currentAdmin);
-    // persist safe session (no password)
-    saveSessionToStorage(currentAdmin);
-    // close login and open first allowed view
-    closeLoginModal(true);
-    const firstNav = qsa('.nav-item').find(n => n.style.display !== 'none');
-    if(firstNav) showView(firstNav.dataset.view);
-  }catch(e){
-    console.error('login flow error', e);
-    el('login-error').textContent = 'Login failed';
-    el('login-error').style.display = '';
-  } finally {
-    el('login-submit').disabled = false; el('login-submit').textContent = 'Sign in';
-  }
-});
-
-/* Sign out button */
-el('btn-signout')?.addEventListener('click', ()=> {
-  signOut();
-});
-
-/* =========================
-   Routing / Views (permission-aware)
-   ========================= */
-const views = {
-  dashboard: el('view-dashboard'),
-  mocks: el('view-mocks'),
-  builder: el('view-builder'),
-  pyqs: el('view-pyqs'),
-  users: el('view-users'),
-  results: el('view-results'),
-  settings: el('view-settings')
-};
-
-function showView(name){
-  if(!currentAdmin){
-    showLoginModal();
-    return;
-  }
-  const allowed = (currentAdmin.permission === 'superadmin') ? ALL_VIEWS.slice() : (Array.isArray(currentAdmin.visibleTabs) && currentAdmin.visibleTabs.length ? currentAdmin.visibleTabs : ['dashboard','pyqs']);
-  if(!allowed.includes(name)){
-    alert('You do not have permission to access this section.');
-    const first = allowed.find(v => views[v]);
-    if(first) name = first;
-    else { console.warn('No allowed views'); return; }
-  }
-
-  Object.values(views).forEach(v => v && (v.style.display = 'none'));
-  if(!views[name]) return;
-  views[name].style.display = '';
-  qsa('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view===name));
-  if(name === 'dashboard') loadDashboard();
-  if(name === 'mocks') loadMocksList();
-  if(name === 'users') loadUsers();
-  if(name === 'results') loadResults();
-  if(name === 'pyqs') loadPyqsList();
-  if(name === 'settings') loadSettings();
-}
-qsa('.nav-item').forEach(n => n.addEventListener('click', ()=> showView(n.dataset.view)));
-
-/* =========================
-   ADMIN SETTINGS: create/edit admins & set visible tabs
-   (unchanged logic — same as before)
-   ========================= */
-async function loadSettings(){
-  const container = el('admins-list');
-  container.innerHTML = `<div class="small-muted" style="padding:12px">Loading...</div>`;
-  if(!db){ container.innerHTML = `<div class="small-muted" style="padding:12px">No DB configured (admin actions unavailable)</div>`; return; }
-  try{
-    const snap = await db.collection('admins').orderBy('username').get();
-    container.innerHTML = '';
-    if(snap.empty){ container.innerHTML = '<div class="small-muted" style="padding:12px">No admins found.</div>'; return; }
-
-    snap.forEach(doc => {
-      const a = doc.data(); a.id = doc.id;
-      const row = document.createElement('div'); row.className = 'admin-row';
-      const meta = document.createElement('div'); meta.className='meta';
-      const nameDiv = document.createElement('div'); nameDiv.innerHTML = `<strong>${escapeHtml(a.username||'')}</strong><div class="small-muted">${escapeHtml(a.name||'')}</div>`;
-      meta.appendChild(nameDiv);
-
-      const roleDiv = document.createElement('div'); roleDiv.className='chip-mini'; roleDiv.textContent = a.permission || 'admin';
-      meta.appendChild(roleDiv);
-
-      const controls = document.createElement('div'); controls.style.display='flex'; controls.style.gap='8px'; controls.style.alignItems='center';
-
-      const tabsContainer = document.createElement('div'); tabsContainer.style.display='flex'; tabsContainer.style.gap='6px'; tabsContainer.style.flexWrap='wrap';
-      ALL_VIEWS.forEach(v => {
-        const id = `admin-${doc.id}-tab-${v}`;
-        const cb = document.createElement('input'); cb.type='checkbox'; cb.id = id; cb.value = v; cb.className = 'admin-visible-tab';
-        if(Array.isArray(a.visibleTabs) && a.visibleTabs.includes(v)) cb.checked = true;
-        const lab = document.createElement('label'); lab.htmlFor = id; lab.style.fontSize='12px'; lab.style.marginRight='6px'; lab.style.display='inline-flex'; lab.style.alignItems='center'; lab.style.gap='6px';
-        lab.appendChild(cb); lab.appendChild(document.createTextNode(v));
-        tabsContainer.appendChild(lab);
-      });
-
-      const saveBtn = document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent='Save';
-      saveBtn.addEventListener('click', async ()=> {
-        const checked = Array.from(row.querySelectorAll('.admin-visible-tab:checked')).map(i => i.value);
+    /* Helper: try to determine year for a document.
+       Priority:
+         1) doc.year field if numeric and between 2017-2025
+         2) 4-digit year inside qid (2017-2025)
+         3) null */
+    function extractYearFromDoc(d){
+      const years = [];
+      if(d && d.year){
+        const y = parseInt(String(d.year).trim().slice(0,4), 10);
+        if(!isNaN(y)) years.push(y);
+      }
+      if(d && d.qid && typeof d.qid === 'string'){
+        const m = d.qid.match(/(20(1[7-9]|2[0-5]))/); // 2017-2025
+        if(m) years.push(parseInt(m[1],10));
+      }
+      // also allow year from createdAt if present (firestore Timestamp)
+      if(d && d.createdAt && d.createdAt.toDate){
         try{
-          await db.collection('admins').doc(doc.id).update({ visibleTabs: checked });
-          alert('Saved visible tabs');
-          if(currentAdmin && (currentAdmin.username === a.username || currentAdmin.id === a.id)){
-            currentAdmin.visibleTabs = checked;
-            applyPermissionsAndRenderNav(currentAdmin);
-            const firstNav = qsa('.nav-item').find(n => n.style.display !== 'none');
-            if(firstNav) showView(firstNav.dataset.view);
-            saveSessionToStorage(currentAdmin);
+          const dt = d.createdAt.toDate();
+          const y = dt.getFullYear();
+          if(y >= 2017 && y <= 2025) years.push(y);
+        }catch(e){}
+      }
+      // return first valid year
+      for(const y of years){
+        if(y >= 2017 && y <= 2025) return y;
+      }
+      return null;
+    }
+
+    /* PROGRESS modal: build a map year->Set(qNos) and render table 1..120 */
+    async function openProgressModal(){
+      const root = el('progress-root');
+      const body = el('progress-body');
+      const status = el('progress-status');
+      root.style.display = 'block';
+      root.setAttribute('aria-hidden','false');
+      disablePageScroll();
+      body.innerHTML = `<div class="small-muted">Loading data…</div>`;
+      status.textContent = 'Loading…';
+
+      // years columns 2025 down to 2017
+      const years = [];
+      for(let y = 2025; y >= 2017; y--) years.push(y);
+
+      // prepare map: year -> Set of qnos
+      const map = new Map();
+      years.forEach(y => map.set(y, new Set()));
+
+      try{
+        if(!db){
+          body.innerHTML = `<div class="small-muted">No DB configured</div>`;
+          status.textContent = 'No DB';
+          return;
+        }
+        const snap = await db.collection('pyqs').get();
+        snap.forEach(doc => {
+          const d = doc.data();
+          // determine year
+          let y = extractYearFromDoc(d);
+          // if doc.year is string like '2025' it's handled in extractYearFromDoc
+          // determine qno from qid preferred; if no qid, we might try to read from doc.qno or doc.qNo field if exists
+          let qno = null;
+          if(d && d.qid) qno = extractQNoFromQid(d.qid);
+          if(!qno && d && (d.qNo || d.qno || d.q_num)){
+            const alt = parseInt(String(d.qNo || d.qno || d.q_num).trim(), 10);
+            if(!isNaN(alt) && alt >=1 && alt <=120) qno = alt;
           }
-        }catch(e){ console.error('save admin tabs', e); alert('Failed to save'); }
-      });
+          // fallback: if year not in range but doc.year present numeric, coerce if in range
+          if(y === null && d && d.year){
+            const yy = parseInt(String(d.year).trim(), 10);
+            if(!isNaN(yy) && yy>=2017 && yy<=2025) y = yy;
+          }
+          // Mark if both year and qno are valid
+          if(y !== null && qno !== null && map.has(y)){
+            map.get(y).add(qno);
+          }
+        });
 
-      const delBtn = document.createElement('button'); delBtn.className='btn danger'; delBtn.textContent='Delete';
-      delBtn.addEventListener('click', async ()=> {
-        if(!confirm('Delete this admin?')) return;
-        try{
-          await db.collection('admins').doc(doc.id).delete();
-          loadSettings();
-          alert('Deleted');
-        }catch(e){ console.error('delete admin', e); alert('Failed to delete'); }
-      });
+        // render table
+        const table = document.createElement('table');
+        table.className = 'progress-table';
+        // header
+        const thead = document.createElement('thead');
+        const htr = document.createElement('tr');
+        htr.innerHTML = `<th style="min-width:48px">Q#</th>` + years.map(y => `<th>${y}</th>`).join('');
+        thead.appendChild(htr);
+        table.appendChild(thead);
 
-      controls.appendChild(saveBtn);
-      controls.appendChild(delBtn);
+        const tbody = document.createElement('tbody');
+        // rows 1..120
+        for(let q=1;q<=120;q++){
+          const tr = document.createElement('tr');
+          const firstTd = document.createElement('td');
+          firstTd.textContent = q;
+          firstTd.style.fontWeight = '700';
+          tr.appendChild(firstTd);
 
-      row.appendChild(meta);
-      row.appendChild(tabsContainer);
-      row.appendChild(controls);
+          years.forEach(y => {
+            const td = document.createElement('td');
+            if(map.get(y).has(q)){
+              td.innerHTML = `<div class="cell-check" title="Present"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background:${getComputedStyle(document.documentElement).getPropertyValue('--primary')||'#1db954'}; border-radius:4px; padding:2px"><path d="M20 6L9 17l-5-5"></path></svg></div>`;
+            } else {
+              td.innerHTML = `<div class="cell-empty">—</div>`;
+            }
+            tr.appendChild(td);
+          });
 
-      container.appendChild(row);
-    });
-
-  }catch(e){
-    console.error('loadSettings', e);
-    container.innerHTML = '<div class="small-muted" style="padding:12px">Failed to load admins</div>';
-  }
-}
-
-/* create admin handler */
-el('create-admin')?.addEventListener('click', async ()=>{
-  if(!db) { alert('No DB configured'); return; }
-  const username = el('new-admin-username').value.trim();
-  const name = el('new-admin-name').value.trim();
-  const password = el('new-admin-password').value.trim();
-  const permission = el('new-admin-permission').value;
-  if(!username || !name || !password) return alert('username, name and password are required');
-  const checkedTabs = Array.from(document.querySelectorAll('.new-admin-tab:checked')).map(i => i.value);
-  try{
-    const existing = await db.collection('admins').where('username','==',username).limit(1).get();
-    if(!existing.empty) return alert('Username already exists');
-    await db.collection('admins').add({
-      username, name, password, permission, visibleTabs: checkedTabs, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    el('new-admin-username').value=''; el('new-admin-name').value=''; el('new-admin-password').value='';
-    qsa('.new-admin-tab').forEach(cb=> cb.checked = false);
-    loadSettings();
-    alert('Admin created');
-  }catch(e){ console.error('create admin', e); alert('Failed to create admin'); }
-});
-
-/* =========================
-   The rest of the app (unchanged) - loaders, mocks, builder, pyqs, users, results etc.
-   I kept your prior functions below; they are unchanged except they depend on 'currentAdmin' presence.
-   ================================================================================ */
-
-/* =========================
-   Dashboard
-   ========================= */
-async function loadDashboard(){
-  if(!db){
-    el('dash-users') && (el('dash-users').textContent='—');
-    el('dash-mocks') && (el('dash-mocks').textContent='—');
-    el('dash-attempts') && (el('dash-attempts').textContent='—');
-    return;
-  }
-  try{
-    const [mocksSnap, usersSnap, resSnap] = await Promise.all([db.collection('mocks').get(), db.collection('users').get(), db.collection('res').get()]);
-    el('dash-users').textContent = usersSnap.size;
-    el('dash-mocks').textContent = mocksSnap.size;
-    el('dash-attempts').textContent = resSnap.size;
-  }catch(e){ console.error('loadDashboard', e); }
-}
-
-/* =========================
-   MOCKS list & actions
-   ========================= */
-const mocksTableBody = qs('#mocks-table tbody');
-async function loadMocksList(){
-  if(!mocksTableBody) return;
-  mocksTableBody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
-  if(!db){ mocksTableBody.innerHTML = '<tr><td colspan="7">No DB configured</td></tr>'; return; }
-  try{
-    const snap = await db.collection('mocks').orderBy('name').get();
-    mocksTableBody.innerHTML = '';
-    if(snap.empty){ mocksTableBody.innerHTML = '<tr><td colspan="7">No mocks found.</td></tr>'; return; }
-    snap.forEach(doc=>{
-      const m = doc.data(); m.id = doc.id;
-      const dateStr = formatDateField(m.date);
-      const syl = m.syl ? escapeHtml(m.syl) : '-';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td style="font-weight:800">${escapeHtml(m.name||m.id)}</td><td>${m.qns||'-'}</td><td>${m.time||m.duration||'-'}</td><td>${(m.active==='yes'||m.active===true)?'Yes':'No'}</td><td>${escapeHtml(dateStr)}</td><td>${syl}</td><td style="text-align:right"></td>`;
-      const td = tr.cells[6];
-
-      const toggle = document.createElement('button'); toggle.className='btn secondary'; toggle.textContent = (m.active==='yes'||m.active===true)?'Unpublish':'Publish';
-      toggle.addEventListener('click', async ()=> {
-        try{ await db.collection('mocks').doc(m.id).update({ active: (m.active==='yes'||m.active===true) ? 'no' : 'yes' }); loadMocksList(); }
-        catch(e){ console.error(e); alert('Failed to update status'); }
-      });
-
-      const edit = document.createElement('button'); edit.className='btn secondary'; edit.textContent='Edit'; edit.addEventListener('click', ()=> openMockInBuilder(m.id));
-      const del = document.createElement('button'); del.className='btn danger'; del.textContent='Delete'; del.addEventListener('click', async ()=> {
-        if(!confirm('Delete this mock and its questions?')) return;
-        try{
-          const qSnap = await db.collection('mocks').doc(m.id).collection('questions').get();
-          for(const d of qSnap.docs) await d.ref.delete().catch(()=>{});
-          await db.collection('mocks').doc(m.id).delete();
-          loadMocksList();
-        }catch(e){ console.error(e); alert('Delete failed'); }
-      });
-
-      [toggle, edit, del].forEach(b=> td.appendChild(b));
-      mocksTableBody.appendChild(tr);
-    });
-  }catch(e){ console.error('loadMocksList', e); mocksTableBody.innerHTML = '<tr><td colspan="7">Failed to load mocks</td></tr>'; }
-}
-
-/* =========================
-   MOCK BUILDER
-   ========================= */
-const subjects = { Physics: [], Chemistry: [], Mathematics: [] };
-let editingMockId = null;
-
-const mockNameEl = el('mock-name'), mockQnsEl = el('mock-qns'), mockDurationEl = el('mock-duration'), mockActiveEl = el('mock-active');
-const mockDateEl = el('mock-date'), mockSylEl = el('mock-syl');
-const btnGenerate = el('btn-generate'), saveMockBtn = el('save-mock'), saveAndCloseBtn = el('save-and-close');
-const builderStatus = el('builder-status');
-
-function showSubjectTable(sub){
-  const tbodyId = `tbody-${sub}`;
-  qsa('.subject-table').forEach(tbl => { if(tbl.querySelector(`#${tbodyId}`)) tbl.style.display='block'; else tbl.style.display='none'; });
-  qsa('.tab').forEach(t => t.classList.toggle('active', t.dataset.sub === sub));
-}
-qsa('.tab').forEach(t => t.addEventListener('click', ()=> showSubjectTable(t.dataset.sub)));
-
-function renderAllTables(){ ['Physics','Chemistry','Mathematics'].forEach(s => renderTableFor(s)); }
-function renderTableFor(subject){
-  const tbody = el('tbody-' + subject);
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  const arr = subjects[subject] || [];
-  if(!arr.length){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="5" class="small-muted" style="padding:14px">No questions. Click Generate Rows to create rows for each subject.</td>`;
-    tbody.appendChild(tr);
-    return;
-  }
-  arr.forEach((r, idx) => {
-    const tr = document.createElement('tr');
-    const imgId = `img-${subject}-${idx}`;
-    const ansId = `ans-${subject}-${idx}`;
-    tr.innerHTML = `
-      <td class="qid">${escapeHtml(r.qid)}</td>
-      <td><input id="${imgId}" class="input" value="${escapeHtml(r.imageUrl||'')}" placeholder="https://..." /></td>
-      <td>
-        <select id="${ansId}" class="select">
-          <option value=""></option>
-          <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-        </select>
-      </td>
-      <td style="text-align:center"><button class="btn secondary" data-idx="${idx}" data-sub="${subject}" data-act="preview">Preview</button></td>
-      <td style="text-align:right"><button class="btn danger" data-idx="${idx}" data-sub="${subject}" data-act="remove">Remove</button></td>
-    `;
-    tbody.appendChild(tr);
-    const sel = el(ansId); if(sel) sel.value = r.answer || '';
-
-    tr.querySelectorAll('button').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        const act = b.dataset.act, i = Number(b.dataset.idx), sub = b.dataset.sub;
-        if(act === 'preview'){
-          const url = el(`img-${sub}-${i}`)?.value.trim() || subjects[sub][i].imageUrl;
-          if(!url) return alert('No image link to preview');
-          const w = window.open('','preview','width=900,height=700');
-          w.document.write(`<div style="padding:12px"><img src="${escapeHtml(url)}" style="max-width:100%;height:auto" /></div>`);
-        } else if(act === 'remove'){
-          if(!confirm('Remove this question?')) return;
-          subjects[sub].splice(i,1);
-          subjects[sub].forEach((q,j)=> q.qid = sub[0] + String(j+1));
-          renderTableFor(sub);
+          tbody.appendChild(tr);
         }
-      });
-    });
-  });
-}
+        table.appendChild(tbody);
 
-/* Generate rows (compact button) */
-btnGenerate?.addEventListener('click', (e) => {
-  e.preventDefault();
-  const name = mockNameEl.value.trim();
-  const qns = parseInt(mockQnsEl.value,10);
-  if(!name){ alert('Enter mock name first'); return; }
-  if(!qns || qns <= 0){ alert('Enter a valid total questions count (>0)'); return; }
-  subjects.Physics = []; subjects.Chemistry = []; subjects.Mathematics = [];
-  const per = Math.floor(qns/3); const rem = qns - per*3;
-  for(let i=0;i<per;i++) subjects.Physics.push({ qid:`P${subjects.Physics.length+1}`, imageUrl:'', answer:'' });
-  for(let i=0;i<per;i++) subjects.Chemistry.push({ qid:`C${subjects.Chemistry.length+1}`, imageUrl:'', answer:'' });
-  for(let i=0;i<per;i++) subjects.Mathematics.push({ qid:`M${subjects.Mathematics.length+1}`, imageUrl:'', answer:'' });
-  if(rem >= 1) subjects.Physics.push({ qid:`P${subjects.Physics.length+1}`, imageUrl:'', answer:'' });
-  if(rem >= 2) subjects.Chemistry.push({ qid:`C${subjects.Chemistry.length+1}`, imageUrl:'', answer:'' });
-  subjects.Physics.forEach((q,i)=> q.qid='P'+String(i+1));
-  subjects.Chemistry.forEach((q,i)=> q.qid='C'+String(i+1));
-  subjects.Mathematics.forEach((q,i)=> q.qid='M'+String(i+1));
-  renderAllTables(); showBuilderStatus(`Generated ${qns} rows (${per} per subject + ${rem} remainder)`);
-});
+        body.innerHTML = '';
+        body.appendChild(table);
 
-function showBuilderStatus(msg, ttl=2000){ if(!builderStatus) return; builderStatus.textContent = msg; if(ttl>0) setTimeout(()=> builderStatus.textContent = '', ttl); }
-
-/* save mock (used by builder + generator internally) */
-async function persistMockToDb({ name, qns, time, active, syl, dateToStore }, questionsArr){
-  if(!db) return Promise.reject(new Error('No DB configured'));
-  const legacy = {
-    name,
-    qns,
-    time,
-    active,
-    syl: syl || '',
-    date: dateToStore !== null ? dateToStore : null,
-    updatedAt: firebase && firebase.firestore ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
-  };
-  const mockRef = await db.collection('mocks').add(legacy);
-  const batch = db.batch ? db.batch() : null;
-  for(let i=0;i<questionsArr.length;i++){
-    const q = questionsArr[i];
-    const qRef = db.collection('mocks').doc(mockRef.id).collection('questions').doc(String(i+1));
-    const payload = {
-      qid: q.qid,
-      section: q.section,
-      imageUrl: q.imageUrl || null,
-      answer: q.answer || null,
-      index: i+1
-    };
-    if(batch) batch.set(qRef, payload); else await qRef.set(payload);
-  }
-  if(batch) await batch.commit();
-  return mockRef.id;
-}
-
-/* save mock (builder) */
-async function saveMock(closeAfter=false){
-  const name = mockNameEl.value.trim();
-  if(!name){ alert('Mock name is required'); return; }
-  const qns = Number(mockQnsEl.value) || (subjects.Physics.length + subjects.Chemistry.length + subjects.Mathematics.length);
-  const time = Number(mockDurationEl.value) || 120;
-  const active = mockActiveEl.value || 'yes';
-  const syl = (mockSylEl && mockSylEl.value) ? mockSylEl.value.trim() : '';
-
-  const dateVal = (mockDateEl && mockDateEl.value) ? mockDateEl.value : null;
-  let dateToStore = null;
-  if(dateVal){
-    try{
-      if(firebase && firebase.firestore && firebase.firestore.Timestamp){
-        dateToStore = firebase.firestore.Timestamp.fromDate(new Date(dateVal));
-      } else {
-        dateToStore = new Date(dateVal).toISOString();
+        status.textContent = `Showing coverage for ${years.length} years`;
+      }catch(e){
+        console.error('openProgressModal', e);
+        body.innerHTML = `<div class="small-muted">Failed to load progress: ${escapeHtml(e.message || String(e))}</div>`;
+        status.textContent = 'Failed';
       }
-    }catch(e){
-      dateToStore = dateVal;
     }
-  }
 
-  ['Physics','Chemistry','Mathematics'].forEach(sub=>{
-    for(let i=0;i<subjects[sub].length;i++){
-      const imgInput = el(`img-${sub}-${i}`);
-      const ansSelect = el(`ans-${sub}-${i}`);
-      if(imgInput) subjects[sub][i].imageUrl = imgInput.value.trim();
-      if(ansSelect) subjects[sub][i].answer = ansSelect.value || '';
+    function closeProgressModal(){
+      const root = el('progress-root');
+      root.style.display = 'none';
+      root.setAttribute('aria-hidden','true');
+      enablePageScroll();
+      el('progress-body').innerHTML = '';
+      el('progress-status').textContent = '';
     }
-  });
 
-  const allQs = [];
-  subjects.Physics.forEach((r,i)=> allQs.push({ qid:`P${i+1}`, section:'Physics', imageUrl:r.imageUrl||null, answer:r.answer||null }));
-  subjects.Chemistry.forEach((r,i)=> allQs.push({ qid:`C${i+1}`, section:'Chemistry', imageUrl:r.imageUrl||null, answer:r.answer||null }));
-  subjects.Mathematics.forEach((r,i)=> allQs.push({ qid:`M${i+1}`, section:'Mathematics', imageUrl:r.imageUrl||null, answer:r.answer||null }));
+    /* Listing / filters (unchanged) */
+    async function populateChapterFilter(subject){
+      const chapterSelect = el('pyq-filter-chapter');
+      chapterSelect.innerHTML = `<option value="">All chapters</option>`;
+      if(!db) return;
+      try{
+        let q = db.collection('pyqs');
+        if(subject) q = q.where('subject','==',subject);
+        const snap = await q.get();
+        const chapters = new Set();
+        snap.forEach(d=>{
+          const ch = (d.data().chapter || '').trim();
+          if(ch) chapters.add(ch);
+        });
+        Array.from(chapters).sort().forEach(ch => {
+          const opt = document.createElement('option'); opt.value = ch; opt.textContent = ch;
+          chapterSelect.appendChild(opt);
+        });
+      }catch(e){ console.error('populateChapterFilter', e); }
+    }
 
-  if(allQs.length === 0 && !confirm('No questions were added — continue saving empty mock?')) return;
+    function openAddPyqModal(editDoc){
+      openRecordsModal(editDoc);
+    }
 
-  if(!db){
-    console.log('No DB — would save legacy doc:', { name, qns, time, active, syl, dateToStore, questions: allQs });
-    alert('No Firestore configured — check console.');
-    if(closeAfter) location.reload();
-    return;
-  }
+    async function loadPyqsList(){
+      if(!pyqCardsContainer) return;
+      pyqCardsContainer.innerHTML = `<div class="small-muted" style="padding:12px">Loading...</div>`;
+      if(!db){ pyqCardsContainer.innerHTML = '<div class="small-muted" style="padding:12px">No DB configured</div>'; pyqCountEl.textContent='0'; return; }
 
-  try{
-    const mockId = await persistMockToDb({ name, qns, time, active, syl, dateToStore }, allQs);
-    showBuilderStatus(`Saved mock "${name}" (${allQs.length} questions).`, 4000);
-    if(closeAfter) { alert('Saved. Returning to mocks list.'); editingMockId=null; showView('mocks'); }
-    loadMocksList();
-  }catch(err){
-    console.error('saveMock error:', err);
-    alert('Save failed: ' + (err && err.message ? err.message : String(err)));
-  }
-}
-saveMockBtn?.addEventListener('click', (e)=> { e.preventDefault(); saveMock(false); });
-saveAndCloseBtn?.addEventListener('click', (e)=> { e.preventDefault(); saveMock(true); });
+      try{
+        let q = db.collection('pyqs');
+        const sortBy = el('pyq-sort-by')?.value || 'createdAt';
+        const sortAsc = el('sort-asc').classList.contains('active');
 
-/* open mock (builder) */
-async function openMockInBuilder(mockId){
-  if(!db) return alert('Firestore not configured');
-  try{
-    const doc = await db.collection('mocks').doc(mockId).get();
-    if(!doc.exists) return alert('Mock not found');
-    const m = doc.data();
-    editingMockId = mockId;
-    mockNameEl.value = m.name || '';
-    mockQnsEl.value = m.qns || 60;
-    mockDurationEl.value = m.time || m.duration || 120;
-    mockActiveEl.value = m.active || 'yes';
-    mockSylEl.value = m.syl || '';
+        const snap = await q.get();
+        const rows = [];
+        const fsub = el('pyq-filter-subject').value;
+        const fchap = el('pyq-filter-chapter').value;
+        const fyear = el('pyq-filter-year').value.trim();
+        const qtext = el('pyq-filter').value.trim().toLowerCase();
 
-    try{
-      if(m.date){
-        if(m.date.toDate) {
-          const d = m.date.toDate();
-          mockDateEl.value = d.toISOString().slice(0,10);
-        } else {
-          mockDateEl.value = new Date(m.date).toISOString().slice(0,10);
+        snap.forEach(doc => {
+          const d = doc.data(); d.id = doc.id;
+          if(fsub && d.subject !== fsub) return;
+          if(fchap && String((d.chapter||'')).toLowerCase() !== String((fchap||'')).toLowerCase()) return;
+          if(fyear && String(d.year||'').indexOf(String(fyear)) === -1) return;
+          if(qtext){
+            const hay = `${d.chapter||''} ${d.year||''} ${d.subject||''} ${d.imageUrl||''} ${d.qid||''}`.toLowerCase();
+            if(!hay.includes(qtext)) return;
+          }
+          rows.push(d);
+        });
+
+        rows.sort((a,b)=>{
+          let va = a[sortBy], vb = b[sortBy];
+          if(sortBy === 'createdAt'){
+            va = va && va.toDate ? va.toDate().getTime() : (va ? new Date(va).getTime() : 0);
+            vb = vb && vb.toDate ? vb.toDate().getTime() : (vb ? new Date(vb).getTime() : 0);
+          } else {
+            const na = Number(va), nb = Number(vb);
+            if(!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
+            else { va = (va || '').toString().toLowerCase(); vb = (vb || '').toString().toLowerCase(); }
+          }
+          if(va < vb) return sortAsc ? -1 : 1;
+          if(va > vb) return sortAsc ? 1 : -1;
+          return 0;
+        });
+
+        pyqCardsContainer.innerHTML = '';
+        if(rows.length === 0){
+          pyqCardsContainer.innerHTML = `<div class="small-muted" style="padding:12px">No PYQs found</div>`;
+          pyqCountEl.textContent = '0';
+          return;
         }
-      } else {
-        mockDateEl.value = '';
+        pyqCountEl.textContent = rows.length;
+
+        rows.forEach(d=>{
+          const card = document.createElement('div'); card.className = 'pyq-card';
+          const thumb = document.createElement('div'); thumb.className = 'pyq-thumb';
+          const img = document.createElement('img');
+          img.src = d.imageUrl || '';
+          img.alt = d.chapter || 'PYQ';
+          img.onerror = function(){ this.style.opacity = '0.45'; this.style.filter='grayscale(80%)'; };
+          thumb.appendChild(img);
+
+          const title = document.createElement('div'); title.className = 'pyq-title'; title.textContent = d.chapter || (d.subject || '') + ' PYQ';
+
+          const meta = document.createElement('div'); meta.className = 'pyq-meta';
+          const leftMeta = document.createElement('div'); leftMeta.textContent = d.year || '-';
+          const rightMeta = document.createElement('div'); rightMeta.textContent = d.subject || '-';
+          meta.appendChild(leftMeta); meta.appendChild(rightMeta);
+
+          if(d.correct){
+            const correctBadge = document.createElement('div'); correctBadge.className='small-muted'; correctBadge.textContent = 'Answer: ' + d.correct;
+            correctBadge.style.marginLeft = '8px';
+            meta.appendChild(correctBadge);
+          }
+
+          if(d.qid){
+            const qidBadge = document.createElement('div'); qidBadge.className='small-muted'; qidBadge.textContent = 'QID: ' + d.qid;
+            qidBadge.style.marginLeft = '8px';
+            meta.appendChild(qidBadge);
+          }
+
+          const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.style.justifyContent='flex-end';
+
+          const eyeBtn = document.createElement('button'); eyeBtn.className='icon-btn'; eyeBtn.title = 'View';
+          eyeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2fbf7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>`;
+          eyeBtn.addEventListener('click', ()=> openPreviewModal(d.imageUrl || '', d.chapter || ''));
+
+          const editBtn = document.createElement('button'); editBtn.className = 'icon-btn'; editBtn.title='Edit';
+          editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#2fbf7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16">
+            <path d="M3 21v-3.6a2 2 0 0 1 .6-1.4L17 3.6a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L6.6 21.4A2 2 0 0 1 5.2 22H3z"></path>
+          </svg>`;
+          editBtn.addEventListener('click', ()=> {
+            openAddPyqModal({ id: d.id, imageUrl: d.imageUrl, chapter: d.chapter, year: d.year, subject: d.subject, correct: d.correct, qid: d.qid });
+          });
+
+          const delBtn = document.createElement('button'); delBtn.className = 'icon-btn'; delBtn.title='Delete';
+          delBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${'#e03a3a'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+            <path d="M10 11v6"></path>
+            <path d="M14 11v6"></path>
+            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+          </svg>`;
+          delBtn.addEventListener('click', async ()=> {
+            if(!confirm('Delete this PYQ?')) return;
+            try{
+              await db.collection('pyqs').doc(d.id).delete();
+              loadPyqsList();
+            }catch(e){ console.error('delete pyq', e); alert('Delete failed'); }
+          });
+
+          actions.appendChild(eyeBtn);
+          actions.appendChild(editBtn);
+          actions.appendChild(delBtn);
+
+          const badge = document.createElement('div'); badge.className = 'cee-badge'; badge.textContent = 'CEE ASSAM';
+
+          card.appendChild(thumb);
+          card.appendChild(title);
+          card.appendChild(meta);
+          card.appendChild(actions);
+          card.appendChild(badge);
+
+          pyqCardsContainer.appendChild(card);
+        });
+
+        populateChapterFilter(el('pyq-filter-subject').value);
+      }catch(e){
+        console.error('loadPyqsList', e);
+        pyqCardsContainer.innerHTML = '<div class="small-muted" style="padding:12px">Failed to load</div>';
+        pyqCountEl.textContent='0';
       }
-    }catch(e){ mockDateEl.value = ''; }
-
-    subjects.Physics=[]; subjects.Chemistry=[]; subjects.Mathematics=[];
-    let i=1;
-    while(m.hasOwnProperty(`img_p${i}`) || m.hasOwnProperty(`ans_p${i}`)){ subjects.Physics.push({ qid:`P${i}`, imageUrl: m[`img_p${i}`] || '', answer: m[`ans_p${i}`] || '' }); i++; }
-    i=1;
-    while(m.hasOwnProperty(`img_c${i}`) || m.hasOwnProperty(`ans_c${i}`)){ subjects.Chemistry.push({ qid:`C${i}`, imageUrl: m[`img_c${i}`] || '', answer: m[`ans_c${i}`] || '' }); i++; }
-    i=1;
-    while(m.hasOwnProperty(`img_m${i}`) || m.hasOwnProperty(`ans_m${i}`)){ subjects.Mathematics.push({ qid:`M${i}`, imageUrl: m[`img_m${i}`] || '', answer: m[`ans_m${i}`] || '' }); i++; }
-
-    if(subjects.Physics.length + subjects.Chemistry.length + subjects.Mathematics.length === 0){
-      const qSnap = await db.collection('mocks').doc(mockId).collection('questions').orderBy('index').get();
-      qSnap.docs.forEach(d=>{
-        const data = d.data();
-        const sec = (data.section||'').toLowerCase();
-        if(sec.startsWith('p')) subjects.Physics.push({ qid: data.qid || `P${subjects.Physics.length+1}`, imageUrl: data.imageUrl||'', answer: data.answer||'' });
-        else if(sec.startsWith('c')) subjects.Chemistry.push({ qid: data.qid || `C${subjects.Chemistry.length+1}`, imageUrl: data.imageUrl||'', answer: data.answer||'' });
-        else subjects.Mathematics.push({ qid: data.qid || `M${subjects.Mathematatics.length+1}`, imageUrl: data.imageUrl||'', answer: data.answer||'' });
-      });
     }
 
-    showView('builder'); showSubjectTable('Physics'); renderAllTables(); showBuilderStatus(`Loaded mock "${m.name||mockId}"`);
-  }catch(e){ console.error('openMockInBuilder', e); alert('Failed to load mock: ' + (e.message||e)); }
-}
-
-/* =========================
-   PYQs feature (cards) — unchanged functionality
-   ========================= */
-const pyqCardsContainer = el('pyq-cards');
-const pyqCountEl = el('pyq-count');
-
-el('btn-new-pyq')?.addEventListener('click', ()=> openAddPyqModal());
-el('close-add-pyq')?.addEventListener('click', ()=> closeAddPyqModal());
-
-el('btn-refresh-pyqs')?.addEventListener('click', ()=> loadPyqsList());
-el('pyq-filter')?.addEventListener('input', ()=> loadPyqsList());
-el('pyq-filter-subject')?.addEventListener('change', ()=> {
-  populateChapterFilter(el('pyq-filter-subject').value);
-  loadPyqsList();
-});
-el('pyq-filter-chapter')?.addEventListener('change', ()=> loadPyqsList());
-el('pyq-filter-year')?.addEventListener('input', ()=> loadPyqsList());
-
-function setSortOrder(isAsc){
-  if(isAsc){
-    el('sort-asc').classList.add('active'); el('sort-asc').setAttribute('aria-pressed','true');
-    el('sort-desc').classList.remove('active'); el('sort-desc').setAttribute('aria-pressed','false');
-  } else {
-    el('sort-desc').classList.add('active'); el('sort-desc').setAttribute('aria-pressed','true');
-    el('sort-asc').classList.remove('active'); el('sort-asc').setAttribute('aria-pressed','false');
-  }
-}
-el('sort-asc')?.addEventListener('click', ()=> { setSortOrder(true); loadPyqsList(); });
-el('sort-desc')?.addEventListener('click', ()=> { setSortOrder(false); loadPyqsList(); });
-
-function openAddPyqModal(editDoc){
-  el('modal-add-pyq').style.display = 'block';
-  if(editDoc){
-    el('add-pyq-title').textContent = 'Edit PYQ';
-    el('pyq-image').value = editDoc.imageUrl || '';
-    el('pyq-chapter').value = editDoc.chapter || '';
-    el('pyq-year').value = editDoc.year || '';
-    el('pyq-subject').value = editDoc.subject || 'Physics';
-    el('pyq-correct').value = editDoc.correct || '';
-    el('modal-add-pyq').dataset.editId = editDoc.id;
-  } else {
-    el('add-pyq-title').textContent = 'Add PYQ';
-    el('pyq-image').value = '';
-    el('pyq-chapter').value = '';
-    el('pyq-year').value = '';
-    el('pyq-subject').value = 'Physics';
-    el('pyq-correct').value = '';
-    delete el('modal-add-pyq').dataset.editId;
-  }
-}
-
-function closeAddPyqModal(){
-  el('modal-add-pyq').style.display = 'none';
-  delete el('modal-add-pyq').dataset.editId;
-  if(el('pyq-correct')) el('pyq-correct').value = '';
-}
-
-el('save-pyq')?.addEventListener('click', async ()=>{
-  const url = el('pyq-image').value.trim();
-  const chapter = el('pyq-chapter').value.trim();
-  const year = el('pyq-year').value.trim();
-  const subject = el('pyq-subject').value;
-  const correct = el('pyq-correct') ? el('pyq-correct').value || '' : '';
-  if(!url) return alert('Image URL is required');
-  if(!db){
-    console.log('PYQ to save (no DB):', { imageUrl:url, chapter, year, subject, correct });
-    alert('No Firestore configured — check console.');
-    closeAddPyqModal();
-    return;
-  }
-  try{
-    const editId = el('modal-add-pyq').dataset.editId;
-    if(editId){
-      await db.collection('pyqs').doc(editId).update({
-        imageUrl: url,
-        chapter: chapter || '',
-        year: year || '',
-        subject: subject || '',
-        correct: correct || '',
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      alert('PYQ updated');
-    } else {
-      await db.collection('pyqs').add({
-        imageUrl: url,
-        chapter: chapter || '',
-        year: year || '',
-        subject: subject || '',
-        correct: correct || '',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      alert('PYQ saved');
-    }
-    closeAddPyqModal();
+    // initial
+    setSortOrder(true);
+    populateChapterFilter('');
     loadPyqsList();
-  }catch(e){ console.error('save pyq', e); alert('Failed to save'); }
-});
 
-async function populateChapterFilter(subject){
-  const chapterSelect = el('pyq-filter-chapter');
-  chapterSelect.innerHTML = `<option value="">All chapters</option>`;
-  if(!db) return;
-  try{
-    let q = db.collection('pyqs');
-    if(subject) q = q.where('subject','==',subject);
-    const snap = await q.get();
-    const chapters = new Set();
-    snap.forEach(d=>{
-      const ch = (d.data().chapter || '').trim();
-      if(ch) chapters.add(ch);
-    });
-    Array.from(chapters).sort().forEach(ch => {
-      const opt = document.createElement('option'); opt.value = ch; opt.textContent = ch;
-      chapterSelect.appendChild(opt);
-    });
-  }catch(e){ console.error('populateChapterFilter', e); }
-}
-
-async function loadPyqsList(){
-  if(!pyqCardsContainer) return;
-  pyqCardsContainer.innerHTML = `<div class="small-muted" style="padding:12px">Loading...</div>`;
-  if(!db){ pyqCardsContainer.innerHTML = '<div class="small-muted" style="padding:12px">No DB configured</div>'; pyqCountEl.textContent='0'; return; }
-
-  try{
-    let q = db.collection('pyqs');
-    const sortBy = el('pyq-sort-by')?.value || 'createdAt';
-    const sortAsc = el('sort-asc').classList.contains('active');
-    const snap = await q.get();
-    const rows = [];
-    const fsub = el('pyq-filter-subject').value;
-    const fchap = el('pyq-filter-chapter').value;
-    const fyear = el('pyq-filter-year').value.trim();
-    const qtext = el('pyq-filter').value.trim().toLowerCase();
-
-    snap.forEach(doc => {
-      const d = doc.data(); d.id = doc.id;
-      if(fsub && d.subject !== fsub) return;
-      if(fchap && String((d.chapter||'')).toLowerCase() !== String((fchap||'')).toLowerCase()) return;
-      if(fyear && String(d.year||'').indexOf(String(fyear)) === -1) return;
-      if(qtext){
-        const hay = `${d.chapter||''} ${d.year||''} ${d.subject||''} ${d.imageUrl||''}`.toLowerCase();
-        if(!hay.includes(qtext)) return;
-      }
-      rows.push(d);
-    });
-
-    rows.sort((a,b)=>{
-      let va = a[sortBy], vb = b[sortBy];
-      if(sortBy === 'createdAt'){
-        va = va && va.toDate ? va.toDate().getTime() : (va ? new Date(va).getTime() : 0);
-        vb = vb && vb.toDate ? vb.toDate().getTime() : (vb ? new Date(vb).getTime() : 0);
-      } else {
-        const na = Number(va), nb = Number(vb);
-        if(!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
-        else { va = (va || '').toString().toLowerCase(); vb = (vb || '').toString().toLowerCase(); }
-      }
-      if(va < vb) return sortAsc ? -1 : 1;
-      if(va > vb) return sortAsc ? 1 : -1;
-      return 0;
-    });
-
-    pyqCardsContainer.innerHTML = '';
-    if(rows.length === 0){
-      pyqCardsContainer.innerHTML = `<div class="small-muted" style="padding:12px">No PYQs found</div>`;
-      pyqCountEl.textContent = '0';
-      return;
-    }
-    pyqCountEl.textContent = rows.length;
-
-    rows.forEach(d=>{
-      const card = document.createElement('div'); card.className = 'pyq-card';
-      const thumb = document.createElement('div'); thumb.className = 'pyq-thumb';
-      const img = document.createElement('img');
-      img.src = d.imageUrl || '';
-      img.alt = d.chapter || 'PYQ';
-      img.onerror = function(){ this.style.opacity = '0.45'; this.style.filter='grayscale(80%)'; };
-      thumb.appendChild(img);
-
-      const title = document.createElement('div'); title.className = 'pyq-title'; title.textContent = d.chapter || (d.subject || '') + ' PYQ';
-
-      const meta = document.createElement('div'); meta.className = 'pyq-meta';
-      const leftMeta = document.createElement('div'); leftMeta.textContent = d.year || '-';
-      const rightMeta = document.createElement('div'); rightMeta.textContent = d.subject || '-';
-      meta.appendChild(leftMeta); meta.appendChild(rightMeta);
-
-      if(d.correct){
-        const correctBadge = document.createElement('div'); correctBadge.className='small-muted'; correctBadge.textContent = 'Answer: ' + d.correct;
-        correctBadge.style.marginLeft = '8px';
-        meta.appendChild(correctBadge);
-      }
-
-      const actions = document.createElement('div'); actions.className = 'pyq-actions';
-
-      const editBtn = document.createElement('button'); editBtn.className = 'icon-btn'; editBtn.title='Edit';
-      editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 21v-3.6a2 2 0 0 1 .6-1.4L17 3.6a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L6.6 21.4A2 2 0 0 1 5.2 22H3z"></path>
-      </svg>`;
-      editBtn.addEventListener('click', ()=> {
-        openAddPyqModal({ id: d.id, imageUrl: d.imageUrl, chapter: d.chapter, year: d.year, subject: d.subject, correct: d.correct });
-      });
-
-      const delBtn = document.createElement('button'); delBtn.className = 'icon-btn'; delBtn.title='Delete';
-      delBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <polyline points="3 6 5 6 21 6"></polyline>
-        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-        <path d="M10 11v6"></path>
-        <path d="M14 11v6"></path>
-        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-      </svg>`;
-      delBtn.addEventListener('click', async ()=> {
-        if(!confirm('Delete this PYQ?')) return;
-        try{
-          await db.collection('pyqs').doc(d.id).delete();
-          loadPyqsList();
-        }catch(e){ console.error('delete pyq', e); alert('Delete failed'); }
-      });
-
-      const titleRow = document.createElement('div'); titleRow.style.display='flex'; titleRow.style.gap='12px'; titleRow.style.alignItems='center';
-      titleRow.appendChild(title);
-      card.appendChild(thumb);
-      card.appendChild(titleRow);
-      card.appendChild(meta);
-
-      actions.appendChild(editBtn);
-      actions.appendChild(delBtn);
-
-      card.appendChild(actions);
-
-      pyqCardsContainer.appendChild(card);
-    });
-
-    populateChapterFilter(el('pyq-filter-subject').value);
-  }catch(e){ console.error('loadPyqsList', e); pyqCardsContainer.innerHTML = '<div class="small-muted" style="padding:12px">Failed to load</div>'; pyqCountEl.textContent='0'; }
-}
-
-/* =========================
-   IMPORT PYQs (card view in fullscreen modal)
-   ========================= */
-el('import-pyqs-btn')?.addEventListener('click', ()=> {
-  el('modal-import-pyqs').style.display = 'block';
-  el('import-selected-count').textContent = '0';
-  populateImportChapterFilter(el('import-filter-subject').value).then(()=> loadImportPyqs());
-});
-el('close-import-pyqs')?.addEventListener('click', ()=> el('modal-import-pyqs').style.display = 'none');
-el('import-refresh')?.addEventListener('click', ()=> loadImportPyqs());
-el('import-filter-subject')?.addEventListener('change', ()=> {
-  populateImportChapterFilter(el('import-filter-subject').value).then(()=> loadImportPyqs());
-});
-el('import-filter-chapter')?.addEventListener('change', ()=> loadImportPyqs());
-el('import-filter-year')?.addEventListener('input', ()=> loadImportPyqs());
-el('import-filter-q')?.addEventListener('input', ()=> loadImportPyqs());
-
-function setImportSortOrder(isAsc){
-  if(isAsc){
-    el('import-sort-asc').classList.add('active'); el('import-sort-asc').setAttribute('aria-pressed','true');
-    el('import-sort-desc').classList.remove('active'); el('import-sort-desc').setAttribute('aria-pressed','false');
-  } else {
-    el('import-sort-desc').classList.add('active'); el('import-sort-desc').setAttribute('aria-pressed','true');
-    el('import-sort-asc').classList.remove('active'); el('import-sort-asc').setAttribute('aria-pressed','false');
-  }
-}
-el('import-sort-asc')?.addEventListener('click', ()=> { setImportSortOrder(true); loadImportPyqs(); });
-el('import-sort-desc')?.addEventListener('click', ()=> { setImportSortOrder(false); loadImportPyqs(); });
-
-async function populateImportChapterFilter(subject){
-  const chapterSelect = el('import-filter-chapter');
-  chapterSelect.innerHTML = `<option value="">Any chapter</option>`;
-  if(!db) return;
-  try{
-    let q = db.collection('pyqs');
-    if(subject) q = q.where('subject','==',subject);
-    const snap = await q.get();
-    const chapters = new Set();
-    snap.forEach(d=>{
-      const ch = (d.data().chapter || '').trim();
-      if(ch) chapters.add(ch);
-    });
-    Array.from(chapters).sort().forEach(ch => {
-      const opt = document.createElement('option'); opt.value = ch; opt.textContent = ch;
-      chapterSelect.appendChild(opt);
-    });
-  }catch(e){ console.error('populateImportChapterFilter', e); }
-}
-
-async function loadImportPyqs(){
-  const container = el('import-pyq-cards');
-  if(!container) return;
-  container.innerHTML = `<div class="small-muted" style="padding:12px">Loading...</div>`;
-  if(!db){ container.innerHTML = '<div class="small-muted" style="padding:12px">No DB configured</div>'; el('import-selected-count').textContent = '0'; return; }
-
-  try{
-    const fsub = el('import-filter-subject').value;
-    const fchap = el('import-filter-chapter').value;
-    const fyear = el('import-filter-year').value.trim();
-    const qtext = el('import-filter-q').value.trim().toLowerCase();
-    const sortBy = el('import-sort-by')?.value || 'createdAt';
-    const sortAsc = el('import-sort-asc').classList.contains('active');
-
-    const snap = await db.collection('pyqs').get();
-    const rows = [];
-    snap.forEach(doc => {
-      const d = doc.data(); d.id = doc.id;
-      if(fsub && d.subject !== fsub) return;
-      if(fchap && String((d.chapter||'')).toLowerCase() !== String((fchap||'')).toLowerCase()) return;
-      if(fyear && String(d.year||'').indexOf(String(fyear)) === -1) return;
-      if(qtext){
-        const hay = `${d.chapter||''} ${d.year||''} ${d.subject||''} ${d.imageUrl||''}`.toLowerCase();
-        if(!hay.includes(qtext)) return;
-      }
-      rows.push(d);
-    });
-
-    rows.sort((a,b)=>{
-      let va = a[sortBy], vb = b[sortBy];
-      if(sortBy === 'createdAt'){
-        va = va && va.toDate ? va.toDate().getTime() : (va ? new Date(va).getTime() : 0);
-        vb = vb && vb.toDate ? vb.toDate().getTime() : (vb ? new Date(vb).getTime() : 0);
-      } else {
-        const na = Number(va), nb = Number(vb);
-        if(!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
-        else { va = (va || '').toString().toLowerCase(); vb = (vb || '').toString().toLowerCase(); }
-      }
-      if(va < vb) return sortAsc ? -1 : 1;
-      if(va > vb) return sortAsc ? 1 : -1;
-      return 0;
-    });
-
-    container.innerHTML = '';
-    if(rows.length === 0){
-      container.innerHTML = `<div class="small-muted" style="padding:12px">No PYQs found</div>`;
-      el('import-selected-count').textContent = '0';
-      return;
-    }
-
-    rows.forEach(d=>{
-      const card = document.createElement('div'); card.className = 'pyq-card';
-      card.style.minHeight = '140px';
-
-      const topRow = document.createElement('div'); topRow.style.display='flex'; topRow.style.justifyContent='space-between'; topRow.style.gap='8px'; topRow.style.alignItems='center';
-      const left = document.createElement('div'); left.style.display='flex'; left.style.gap='12px'; left.style.alignItems='center';
-      const cb = document.createElement('input'); cb.type='checkbox'; cb.className='import-card-checkbox'; cb.dataset.id = d.id;
-      cb.style.width='18px'; cb.style.height='18px';
-      const thumb = document.createElement('div'); thumb.className='pyq-thumb'; thumb.style.width='96px'; thumb.style.height='72px';
-      const img = document.createElement('img'); img.src = d.imageUrl || ''; img.alt = d.chapter || 'PYQ';
-      img.onerror = function(){ this.style.opacity = '0.45'; this.style.filter='grayscale(80%)'; };
-      thumb.appendChild(img);
-      const metaCol = document.createElement('div');
-      const title = document.createElement('div'); title.className = 'pyq-title'; title.style.maxWidth='260px'; title.textContent = d.chapter || '-';
-      const small = document.createElement('div'); small.className='small-muted'; small.textContent = `${d.year || '-'} · ${d.subject || '-'}`;
-      metaCol.appendChild(title); metaCol.appendChild(small);
-      if(d.correct){
-        const corr = document.createElement('div'); corr.className='small-muted'; corr.textContent = `Answer: ${d.correct}`; corr.style.marginTop='6px';
-        metaCol.appendChild(corr);
-      }
-
-      left.appendChild(cb); left.appendChild(thumb); left.appendChild(metaCol);
-
-      const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px';
-      const viewLink = document.createElement('a'); viewLink.href = d.imageUrl || '#'; viewLink.target = '_blank'; viewLink.rel='noreferrer'; viewLink.className='btn secondary'; viewLink.textContent = 'View';
-      const addSingle = document.createElement('button'); addSingle.className='btn'; addSingle.textContent='Insert';
-      addSingle.addEventListener('click', ()=> {
-        insertPyqsIntoBuilder([d], el('import-target-section').value || 'Physics');
-        showBuilderStatus(`Inserted 1 PYQ into ${el('import-target-section').value || 'Physics'}`);
-      });
-
-      actions.appendChild(viewLink); actions.appendChild(addSingle);
-
-      topRow.appendChild(left); topRow.appendChild(actions);
-
-      card.appendChild(topRow);
-
-      const footer = document.createElement('div'); footer.style.display='flex'; footer.style.justifyContent='space-between'; footer.style.marginTop='8px';
-      const leftInfo = document.createElement('div'); leftInfo.className='muted-small'; leftInfo.textContent = `ID: ${d.id}`;
-      const rightBtns = document.createElement('div'); rightBtns.style.display='flex'; rightBtns.style.gap='6px';
-
-      const editBtn = document.createElement('button'); editBtn.className='icon-btn'; editBtn.title='Edit';
-      editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 21v-3.6a2 2 0 0 1 .6-1.4L17 3.6a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L6.6 21.4A2 2 0 0 1 5.2 22H3z"></path>
-      </svg>`;
-      editBtn.addEventListener('click', ()=> {
-        openAddPyqModal({ id: d.id, imageUrl: d.imageUrl, chapter: d.chapter, year: d.year, subject: d.subject, correct: d.correct });
-      });
-
-      const delBtn = document.createElement('button'); delBtn.className='icon-btn'; delBtn.title='Delete';
-      delBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <polyline points="3 6 5 6 21 6"></polyline>
-        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-        <path d="M10 11v6"></path>
-        <path d="M14 11v6"></path>
-        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-      </svg>`;
-      delBtn.addEventListener('click', async ()=> {
-        if(!confirm('Delete this PYQ?')) return;
-        try{ await db.collection('pyqs').doc(d.id).delete(); loadImportPyqs(); } catch(e){ console.error(e); alert('Delete failed'); }
-      });
-
-      rightBtns.appendChild(editBtn); rightBtns.appendChild(delBtn);
-
-      footer.appendChild(leftInfo); footer.appendChild(rightBtns);
-      card.appendChild(footer);
-
-      container.appendChild(card);
-    });
-
-    qsa('.import-card-checkbox').forEach(cb=>{
-      cb.addEventListener('change', ()=> {
-        const count = qsa('.import-card-checkbox:checked').length;
-        el('import-selected-count').textContent = count;
-      });
-    });
-
-    el('import-selected-count').textContent = '0';
-  }catch(e){
-    console.error('loadImportPyqs', e);
-    container.innerHTML = '<div class="small-muted" style="padding:12px">Failed to load</div>';
-    el('import-selected-count').textContent = '0';
-  }
-}
-
-el('import-insert-selected')?.addEventListener('click', async ()=>{
-  const checked = qsa('.import-card-checkbox:checked').map(cb => cb.dataset.id);
-  if(checked.length === 0) return alert('Select at least one PYQ to insert');
-  if(!db) return alert('No DB configured');
-  try{
-    const docs = await Promise.all(checked.map(id => db.collection('pyqs').doc(id).get().then(d=> ({ id: d.id, ...(d.data()||{}) }) )));
-    const target = el('import-target-section').value || 'Physics';
-    insertPyqsIntoBuilder(docs, target);
-    el('modal-import-pyqs').style.display = 'none';
-    showBuilderStatus(`Inserted ${docs.length} PYQs into ${target}`, 4000);
-  }catch(e){ console.error('insert selected pyqs', e); alert('Failed to insert selected'); }
-});
-
-function insertPyqsIntoBuilder(pyqDocs, targetSection){
-  if(!['Physics','Chemistry','Mathematics'].includes(targetSection)) targetSection='Physics';
-  const arr = subjects[targetSection] || [];
-  pyqDocs.forEach(d=>{
-    arr.push({ qid: targetSection[0] + String(arr.length+1), imageUrl: d.imageUrl || '', answer: d.correct || d.answer || '' });
-  });
-  arr.forEach((q,i)=> q.qid = targetSection[0] + String(i+1));
-  subjects[targetSection] = arr;
-  renderTableFor(targetSection);
-}
-
-/* =========================
-   Users
-   ========================= */
-const usersTableBody = qs('#users-table tbody');
-async function loadUsers(){
-  if(!usersTableBody) return;
-  usersTableBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
-  if(!db){ usersTableBody.innerHTML = '<tr><td colspan="5">No DB configured</td></tr>'; return; }
-  try{
-    const snap = await db.collection('users').orderBy('username').get();
-    usersTableBody.innerHTML = '';
-    if(snap.empty){ usersTableBody.innerHTML = '<tr><td colspan="5">No users</td></tr>'; return; }
-    snap.forEach(doc=>{
-      const u = doc.data(); u.id = doc.id;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${escapeHtml(u.username||'-')}</td><td>${escapeHtml(u.name||'-')}</td><td>${escapeHtml(u.role||'student')}</td><td>${u.createdAt && u.createdAt.toDate ? u.createdAt.toDate().toLocaleString() : '-'}</td><td></td>`;
-      const td = tr.cells[4];
-      const toggle = document.createElement('button'); toggle.className='btn secondary'; toggle.textContent = u.disabled? 'Enable' : 'Disable';
-      toggle.addEventListener('click', async ()=> { await db.collection('users').doc(u.id).update({ disabled: !u.disabled }); loadUsers(); });
-      const del = document.createElement('button'); del.className='btn danger'; del.textContent='Delete'; del.addEventListener('click', async ()=> { if(!confirm('Delete user?')) return; await db.collection('users').doc(u.id).delete(); loadUsers(); });
-      td.appendChild(toggle); td.appendChild(del);
-      usersTableBody.appendChild(tr);
-    });
-  }catch(e){ console.error('loadUsers', e); usersTableBody.innerHTML = '<tr><td colspan="5">Failed to load</td></tr>'; }
-}
-
-const modalAddUser = el('modal-add-user');
-el('btn-add-user')?.addEventListener('click', ()=> {
-  if(modalAddUser) modalAddUser.style.display = 'flex';
-  else {
-    const username = prompt('New student username:'); if(!username) return;
-    const name = prompt('Name:'); if(!name) return;
-    const password = prompt('Password:'); if(!password) return;
-    if(!db) return alert('No DB configured');
-    db.collection('users').add({ username, name, password, role:'student', disabled:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(()=> { alert('Created'); loadUsers(); }).catch(e=> { console.error(e); alert('Failed'); });
-  }
-});
-
-/* =========================
-   Results
-   ========================= */
-const resultsTableBody = qs('#results-table tbody');
-async function loadResults(){
-  if(!resultsTableBody) return;
-  resultsTableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
-  if(!db){ resultsTableBody.innerHTML = '<tr><td colspan="6">No DB configured</td></tr>'; return; }
-  try{
-    const snap = await db.collection('res').orderBy('date','desc').limit(200).get();
-    resultsTableBody.innerHTML = '';
-    if(snap.empty){ resultsTableBody.innerHTML = '<tr><td colspan="6">No results</td></tr>'; return; }
-    snap.forEach(doc=>{
-      const r = doc.data(); r.id = doc.id;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${escapeHtml(r.username||r.name||'-')}</td><td>${escapeHtml(r.mockId||'-')}</td><td>${r.score||0}</td><td>${r.date && r.date.toDate ? r.date.toDate().toLocaleString() : '-'}</td><td>${r.durationSec?Math.floor(r.durationSec/60)+'m':''}</td><td></td>`;
-      const td = tr.cells[5];
-
-      const view = document.createElement('button'); view.className='btn secondary'; view.textContent='View';
-      view.addEventListener('click', async ()=> { const docf = await db.collection('res').doc(r.id).get(); showResultDetail(docf.id, docf.data()); });
-
-      const del = document.createElement('button'); del.className='btn danger'; del.textContent='Delete';
-      del.addEventListener('click', async ()=> {
-        if(!confirm('Delete this attempt? This cannot be undone.')) return;
-        try{ await db.collection('res').doc(r.id).delete(); loadResults(); }catch(e){ console.error('delete result', e); alert('Failed to delete'); }
-      });
-
-      td.appendChild(view); td.appendChild(del);
-      resultsTableBody.appendChild(tr);
-    });
-  }catch(e){ console.error('loadResults', e); resultsTableBody.innerHTML = '<tr><td colspan="6">Failed to load</td></tr>'; }
-}
-
-/* attempt modal helpers */
-function showResultDetail(id, d){
-  const detailsEl = el('attempt-details'); detailsEl.innerHTML = ''; if(!d){ detailsEl.textContent = 'No details'; return; }
-  const perQ = d.perQuestion || [];
-  let correct = 0, wrong = 0, unanswered = 0;
-  perQ.forEach(p=>{
-    if(p.selectedIndex == null) unanswered++;
-    else if(p.correctIndex != null && p.selectedIndex === p.correctIndex) correct++;
-    else wrong++;
-  });
-  const total = perQ.length || 1;
-  const percent = Math.round(((d.score || correct) / (d.maxScore || total)) * 100) || Math.round((correct/total)*100);
-
-  const left = document.createElement('div'); left.className = 'score-card';
-  left.appendChild(renderDonut(percent));
-  const scoreNum = document.createElement('div'); scoreNum.className='score-number'; scoreNum.textContent = `${d.score||0}`;
-  left.appendChild(scoreNum);
-  const meta = document.createElement('div'); meta.className='score-meta'; meta.innerHTML = `<div>Duration: ${d.durationSec?Math.floor(d.durationSec/60)+'m '+(d.durationSec%60)+'s':''}</div>`;
-  left.appendChild(meta);
-  const stats = document.createElement('div'); stats.style.display='flex'; stats.style.gap='8px'; stats.style.marginTop='6px';
-  stats.innerHTML = `<div class="small-muted" style="text-align:center"><div style="font-weight:800">${correct}</div><div class="small-muted">Correct</div></div>
-                     <div class="small-muted" style="text-align:center"><div style="font-weight:800">${wrong}</div><div class="small-muted">Wrong</div></div>
-                     <div class="small-muted" style="text-align:center"><div style="font-weight:800">${unanswered}</div><div class="small-muted">Unanswered</div></div>`;
-  left.appendChild(stats);
-
-  const right = document.createElement('div'); right.className='q-list';
-  if(perQ.length === 0) right.innerHTML = '<div class="small-muted" style="padding:10px">No per-question data available.</div>';
-  else perQ.forEach((p,i)=>{
-    const item = document.createElement('div'); item.className='q-item';
-    const leftinfo = document.createElement('div'); leftinfo.innerHTML = `<strong>${i+1}. ${escapeHtml(p.qid||'')}</strong><div class="small-muted">Time: ${p.timeUsedSec||0}s</div>`;
-    const rightinfo = document.createElement('div');
-    const state = (p.selectedIndex==null) ? 'unseen' : (p.selectedIndex===p.correctIndex ? 'correct' : 'wrong');
-    const badge = document.createElement('span'); badge.className = 'badge ' + state; badge.textContent = (p.selectedIndex==null)? 'Unanswered' : (p.selectedIndex===p.correctIndex ? 'Correct' : 'Wrong');
-    rightinfo.appendChild(badge);
-    const metaSmall = document.createElement('div'); metaSmall.className='small-muted'; metaSmall.style.marginTop='6px';
-    metaSmall.textContent = `Selected: ${p.selectedIndex==null?'-':String.fromCharCode(65+p.selectedIndex)} • Correct: ${p.correctIndex==null?'-':String.fromCharCode(65+p.correctIndex)}`;
-    rightinfo.appendChild(metaSmall);
-    item.appendChild(leftinfo); item.appendChild(rightinfo); right.appendChild(item);
-  });
-
-  detailsEl.appendChild(left); detailsEl.appendChild(right);
-  el('modal-attempt').dataset.attemptId = id;
-  el('modal-attempt').style.display = 'block';
-}
-el('close-attempt')?.addEventListener('click', ()=> el('modal-attempt').style.display = 'none');
-
-el('download-attempt')?.addEventListener('click', ()=>{
-  const id = el('modal-attempt').dataset.attemptId;
-  if(!id) return alert('No attempt loaded');
-  db.collection('res').doc(id).get().then(doc=>{
-    const data = doc.data();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `attempt-${id}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  }).catch(e=>{ console.error(e); alert('Export failed'); });
-});
-
-/* donut SVG helper */
-function renderDonut(percent){
-  const size = 110, stroke = 10;
-  const radius = (size - stroke) / 2;
-  const circ = 2 * Math.PI * radius;
-  const offset = circ * (1 - percent/100);
-  const wrapper = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  wrapper.setAttribute('width', size); wrapper.setAttribute('height', size); wrapper.setAttribute('class','donut');
-  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-  const lin = document.createElementNS('http://www.w3.org/2000/svg','linearGradient'); lin.setAttribute('id','grad-'+Math.random().toString(36).slice(2));
-  lin.setAttribute('x1','0%'); lin.setAttribute('y1','0%'); lin.setAttribute('x2','100%'); lin.setAttribute('y2','0%');
-  const stop1 = document.createElementNS('http://www.w3.org/2000/svg','stop'); stop1.setAttribute('offset','0%'); stop1.setAttribute('stop-color','#ff9a2e');
-  const stop2 = document.createElementNS('http://www.w3.org/2000/svg','stop'); stop2.setAttribute('offset','100%'); stop2.setAttribute('stop-color','#6ee7b7');
-  lin.appendChild(stop1); lin.appendChild(stop2); defs.appendChild(lin);
-  const bg = document.createElementNS('http://www.w3.org/2000/svg','circle'); bg.setAttribute('cx', size/2); bg.setAttribute('cy', size/2); bg.setAttribute('r', radius); bg.setAttribute('stroke', '#fff2ea'); bg.setAttribute('stroke-width', stroke); bg.setAttribute('fill','none');
-  const fg = document.createElementNS('http://www.w3.org/2000/svg','circle'); fg.setAttribute('cx', size/2); fg.setAttribute('cy', size/2); fg.setAttribute('r', radius); fg.setAttribute('stroke', `url(#${lin.id})`); fg.setAttribute('stroke-width', stroke); fg.setAttribute('stroke-linecap', 'round'); fg.setAttribute('fill','none'); fg.setAttribute('transform', `rotate(-90 ${size/2} ${size/2})`); fg.setAttribute('stroke-dasharray', `${circ} ${circ}`); fg.setAttribute('stroke-dashoffset', offset);
-  const text = document.createElementNS('http://www.w3.org/2000/svg','text'); text.setAttribute('x', size/2); text.setAttribute('y', size/2 + 5); text.setAttribute('text-anchor','middle'); text.setAttribute('font-size','16'); text.setAttribute('font-weight','700'); text.setAttribute('fill','#2b2b2b'); text.textContent = `${percent}%`;
-  wrapper.appendChild(defs); wrapper.appendChild(bg); wrapper.appendChild(fg); wrapper.appendChild(text);
-  return wrapper;
-}
-
-/* =========================
-   Filters & init
-   ========================= */
-el('filter-mocks')?.addEventListener('input', (e)=>{ const q = e.target.value.toLowerCase(); qsa('#mocks-table tbody tr').forEach(tr=> tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none'); });
-el('filter-results')?.addEventListener('input', (e)=>{ const q = e.target.value.toLowerCase(); qsa('#results-table tbody tr').forEach(tr=> tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none'); });
-
-// default sort order
-setSortOrder(true);
-
-/* If Firestore available, ready */
-if(db){
-  console.log('DB present; ready');
-} else {
-  console.warn('Firestore not configured; read/write will be console-only.');
-}
-</script>
+  </script>
 </body>
 </html>
